@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>古籍版本比对系统 - 智能OCR识别与文本比对</title>
+    <title>古籍版本比对系统 - 完整版</title>
     <style>
         * {
             box-sizing: border-box;
@@ -45,10 +45,6 @@
             margin-top: 0;
             margin-bottom: 20px;
         }
-        .card h3 {
-            color: #5a3a10;
-            margin: 15px 0 10px 0;
-        }
         .btn {
             background: #7a4a1a;
             color: white;
@@ -62,13 +58,9 @@
         }
         .btn:hover {
             background: #5a3a10;
-            transform: scale(1.02);
         }
         .btn-secondary {
             background: #9a7a5a;
-        }
-        .btn-secondary:hover {
-            background: #7a5a3a;
         }
         .btn-outline {
             background: transparent;
@@ -84,25 +76,6 @@
         }
         .btn-success {
             background: #2a6a3a;
-        }
-        .step {
-            background: #f5f0e8;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid #e0d5c5;
-        }
-        .step-number {
-            display: inline-block;
-            background: #7a4a1a;
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            text-align: center;
-            line-height: 30px;
-            margin-right: 10px;
-            font-size: 14px;
         }
         .option-group {
             display: flex;
@@ -124,9 +97,6 @@
             background: #f5ede0;
             color: #7a4a1a;
             font-weight: bold;
-        }
-        .option-btn:hover {
-            border-color: #7a4a1a;
         }
         .number-selector {
             display: flex;
@@ -151,10 +121,10 @@
         .upload-area {
             border: 2px dashed #c4a77d;
             border-radius: 16px;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
             background: #fefcf8;
-            margin: 15px 0;
+            margin: 10px 0;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -175,7 +145,23 @@
             align-items: center;
             flex-wrap: wrap;
             margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8dcc8;
         }
+        .version-title {
+            font-weight: bold;
+            color: #7a4a1a;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        .badge-image { background: #7a4a1a20; color: #7a4a1a; }
+        .badge-text { background: #2a6a3a20; color: #2a6a3a; }
+        .badge-pdf { background: #8b3a3a20; color: #8b3a3a; }
         .image-preview {
             max-width: 150px;
             max-height: 120px;
@@ -250,13 +236,13 @@
             border-radius: 8px;
             font-size: 14px;
         }
-        .warning {
-            background: #fff3e0;
-            border-left-color: #e6a017;
-        }
         .success {
             background: #e0f0e0;
             border-left-color: #2a6a3a;
+        }
+        .warning {
+            background: #fff3e0;
+            border-left-color: #e6a017;
         }
         .loading {
             display: inline-block;
@@ -284,16 +270,32 @@
             background: #7a4a1a;
             transition: width 0.3s;
         }
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
+        .delete-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 5px 10px;
+            color: #8b3a3a;
             border-radius: 20px;
-            font-size: 11px;
-            font-weight: normal;
         }
-        .badge-image { background: #7a4a1a20; color: #7a4a1a; }
-        .badge-text { background: #2a6a3a20; color: #2a6a3a; }
-        .badge-pdf { background: #8b3a3a20; color: #8b3a3a; }
+        .delete-btn:hover {
+            background: #8b3a3a20;
+        }
+        .api-settings {
+            background: #f5f0e8;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+        .api-settings input, .api-settings select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
         @media (max-width: 768px) {
             .version-header {
                 flex-direction: column;
@@ -307,12 +309,12 @@
 <div class="container">
     <div class="header">
         <h1>📜 古籍版本比对系统</h1>
-        <p>图片/PDF自动OCR识别 | 文本版本直接比对 | 多版本智能比对</p>
+        <p>图片/PDF OCR识别 | 文本直接比对 | 多OCR模型选择 | 可删除重新上传</p>
     </div>
 
     <!-- 步骤1：选择添加类型 -->
     <div class="card">
-        <h2><span class="step-number">1</span> 选择添加类型</h2>
+        <h2>1️⃣ 选择添加类型</h2>
         <div class="option-group" id="typeSelector">
             <div class="option-btn" data-type="image">🖼️ 图片版本（需OCR）</div>
             <div class="option-btn" data-type="pdf">📄 PDF版本（需OCR）</div>
@@ -322,7 +324,7 @@
 
     <!-- 步骤2：选择数量 -->
     <div class="card" id="step2Card" style="display: none;">
-        <h2><span class="step-number">2</span> 选择版本数量</h2>
+        <h2>2️⃣ 选择版本数量</h2>
         <div class="number-selector" id="numberSelector">
             <button class="num-btn" data-num="1">1</button>
             <button class="num-btn" data-num="2">2</button>
@@ -336,77 +338,59 @@
 
     <!-- 步骤3：逐一上传/输入 -->
     <div class="card" id="step3Card" style="display: none;">
-        <h2><span class="step-number">3</span> 逐一添加版本</h2>
+        <h2>3️⃣ 逐一添加版本</h2>
         <div id="uploadContainer"></div>
         <div id="allUploadedStatus" style="margin-top: 15px;"></div>
         <button class="btn btn-success" id="finishUploadBtn" style="display: none;">✅ 所有版本已添加，继续</button>
     </div>
 
-    <!-- 步骤4：OCR设置（仅当有图片/PDF版本时显示） -->
+    <!-- 步骤4：OCR设置 -->
     <div class="card" id="step4Card" style="display: none;">
-        <h2><span class="step-number">4</span> 选择OCR识别模型</h2>
-        
-        <div class="info-note">
-            🔍 以下OCR模型均为免费可用，选择后系统会自动调用
-        </div>
+        <h2>4️⃣ 选择OCR识别模型</h2>
+        <div class="info-note">🔍 以下OCR模型均为免费可用，选择后系统会自动调用</div>
         
         <div class="option-group" id="ocrModelSelector">
-            <div class="option-btn" data-ocr="builtin_tesseract">
-                🖥️ 本地OCR (Tesseract.js)<br>
-                <small>纯前端本地识别，无需网络，支持中文</small>
-            </div>
-            <div class="option-btn" data-ocr="builtin_ocr_space">
-                📡 在线OCR (OCR.space)<br>
-                <small>免费API，每天500次，需要网络</small>
-            </div>
-            <div class="option-btn" data-ocr="builtin_baidu_free">
-                🌐 百度OCR免费版<br>
-                <small>需免费注册，每月1000次，识别更准</small>
-            </div>
-            <div class="option-btn" data-ocr="custom">
-                🔧 自定义API<br>
-                <small>使用自己的OCR服务</small>
-            </div>
+            <div class="option-btn" data-ocr="ocrspace">📡 OCR.space<br><small>免费在线API，识别效果好，推荐</small></div>
+            <div class="option-btn" data-ocr="tesseract">🖥️ Tesseract.js<br><small>纯本地识别，无需网络</small></div>
+            <div class="option-btn" data-ocr="baidu">🌐 百度OCR<br><small>需免费注册，每月1000次</small></div>
+            <div class="option-btn" data-ocr="custom">🔧 自定义API<br><small>使用自己的OCR服务</small></div>
+        </div>
+        
+        <!-- 百度OCR设置 -->
+        <div id="baiduSettings" class="api-settings">
+            <h3>百度OCR设置</h3>
+            <p class="info-note" style="margin-bottom: 10px;">🔑 免费注册：<a href="https://console.bce.baidu.com/ai/" target="_blank">https://console.bce.baidu.com/ai/</a></p>
+            <input type="text" id="baiduApiKey" placeholder="API Key">
+            <input type="password" id="baiduSecretKey" placeholder="Secret Key">
         </div>
         
         <!-- 自定义API设置 -->
-        <div id="customApiDiv" style="display: none; margin-top: 20px; padding: 15px; background: #f5f0e8; border-radius: 12px;">
+        <div id="customSettings" class="api-settings">
             <h3>自定义API设置</h3>
-            <input type="text" id="customApiUrl" placeholder="API地址 (如: https://api.example.com/ocr)" style="width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd;">
-            <input type="password" id="customApiKey" placeholder="API密钥 (可选)" style="width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd;">
-            <select id="customApiFormat" style="width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd;">
+            <input type="text" id="customApiUrl" placeholder="API地址 (如: https://api.example.com/ocr)">
+            <input type="password" id="customApiKey" placeholder="API密钥 (可选)">
+            <select id="customApiFormat">
                 <option value="standard">标准格式</option>
                 <option value="baidu">百度OCR格式</option>
                 <option value="aliyun">阿里云OCR格式</option>
             </select>
         </div>
         
-        <!-- 百度OCR设置 -->
-        <div id="baiduApiDiv" style="display: none; margin-top: 20px; padding: 15px; background: #f5f0e8; border-radius: 12px;">
-            <h3>百度OCR设置</h3>
-            <p class="info-note" style="margin-bottom: 10px;">🔑 免费注册：<a href="https://console.bce.baidu.com/ai/" target="_blank">https://console.bce.baidu.com/ai/</a> 获取 API Key 和 Secret Key</p>
-            <input type="text" id="baiduApiKey" placeholder="API Key" style="width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd;">
-            <input type="password" id="baiduSecretKey" placeholder="Secret Key" style="width: 100%; padding: 10px; margin: 8px 0; border-radius: 8px; border: 1px solid #ddd;">
-        </div>
-        
         <button class="btn btn-success" id="startOCRBtn" style="margin-top: 20px;">🚀 开始OCR识别</button>
     </div>
 
-    <!-- 步骤5：OCR识别进度和结果（仅图片/PDF版本） -->
+    <!-- 步骤5：OCR识别结果 -->
     <div class="card" id="step5Card" style="display: none;">
-        <h2><span class="step-number">5</span> OCR识别与人工核查</h2>
+        <h2>5️⃣ OCR识别与人工核查</h2>
         <div id="ocrProgress"></div>
         <div id="ocrResultsContainer"></div>
         <button class="btn btn-success" id="gotoCompareBtn" style="display: none;">📊 进入文本比对</button>
     </div>
 
-    <!-- 步骤6：文本比对（最终步骤） -->
+    <!-- 步骤6：文本比对 -->
     <div class="card" id="step6Card" style="display: none;">
-        <h2><span class="step-number">6</span> 版本比对</h2>
-        
-        <!-- 显示所有版本概览 -->
+        <h2>6️⃣ 版本比对</h2>
         <div id="versionsOverview" style="margin-bottom: 15px;"></div>
-        
         <div class="tabs">
             <div class="tab active" onclick="switchCompareTab('compare', this)">📖 逐句对照</div>
             <div class="tab" onclick="switchCompareTab('diff', this)">🎨 差异高亮</div>
@@ -422,13 +406,12 @@
 
 <script>
     // 全局状态
-    let currentType = null;           // image / pdf / text
-    let selectedCount = 0;            // 选择的版本数量
-    let versions = [];                // 所有版本数据
-    let nextId = 1;                   // 版本ID计数器
-    let selectedOCR = null;           // 选择的OCR模型
-    let ocrCompleted = 0;             // OCR完成计数
-    let needOCR = false;              // 是否需要OCR（是否有图片/PDF版本）
+    let currentType = null;
+    let selectedCount = 0;
+    let versions = [];
+    let nextId = 1;
+    let selectedOCR = 'ocrspace';
+    let currentCompareTab = 'compare';
 
     // ==================== 步骤1：选择类型 ====================
     document.querySelectorAll('[data-type]').forEach(btn => {
@@ -441,8 +424,6 @@
             document.getElementById('step4Card').style.display = 'none';
             document.getElementById('step5Card').style.display = 'none';
             document.getElementById('step6Card').style.display = 'none';
-            
-            // 重置数量选择
             document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
             selectedCount = 0;
         });
@@ -469,7 +450,6 @@
     function initUploadArea() {
         versions = [];
         nextId = 1;
-        needOCR = (currentType === 'image' || currentType === 'pdf');
         
         const container = document.getElementById('uploadContainer');
         container.innerHTML = '';
@@ -479,14 +459,35 @@
             const versionDiv = document.createElement('div');
             versionDiv.className = 'version-card';
             versionDiv.id = `upload_${versionId}`;
+            
+            const typeName = currentType === 'image' ? '图片' : (currentType === 'pdf' ? 'PDF' : '文本');
+            const badgeClass = currentType === 'image' ? 'badge-image' : (currentType === 'pdf' ? 'badge-pdf' : 'badge-text');
+            
             versionDiv.innerHTML = `
                 <div class="version-header">
-                    <strong>📌 版本 ${i} <span class="badge badge-${currentType}" id="typeBadge_${versionId}">${getTypeName(currentType)}</span></strong>
+                    <div>
+                        <span class="version-title">📌 版本 ${i}</span>
+                        <span class="badge ${badgeClass}">${typeName}</span>
+                    </div>
                     <span id="status_${versionId}" style="color:#999;">等待上传</span>
                 </div>
                 <div id="inputArea_${versionId}"></div>
+                <div id="preview_${versionId}"></div>
             `;
             container.appendChild(versionDiv);
+            
+            // 存储版本数据
+            versions.push({
+                id: versionId,
+                index: i,
+                type: currentType,
+                file: null,
+                content: null,
+                name: null,
+                uploaded: false,
+                isProcessed: false,
+                pages: []  // 用于PDF多页
+            });
             
             // 根据类型显示不同的上传界面
             if (currentType === 'image') {
@@ -497,7 +498,6 @@
                         <p>点击上传古籍图片</p>
                         <small>支持 JPG、PNG 格式</small>
                     </div>
-                    <div id="preview_${versionId}"></div>
                 `;
             } else if (currentType === 'pdf') {
                 document.getElementById(`inputArea_${versionId}`).innerHTML = `
@@ -507,7 +507,6 @@
                         <p>点击上传PDF文件</p>
                         <small>支持 PDF 格式，系统会逐页识别</small>
                     </div>
-                    <div id="preview_${versionId}"></div>
                 `;
             } else if (currentType === 'text') {
                 document.getElementById(`inputArea_${versionId}`).innerHTML = `
@@ -516,17 +515,6 @@
                     <button class="btn btn-secondary" style="margin-top:8px;" onclick="confirmTextVersion(${versionId})">✅ 确认添加</button>
                 `;
             }
-            
-            versions.push({
-                id: versionId,
-                index: i,
-                type: currentType,
-                file: null,
-                content: null,
-                name: null,
-                uploaded: false,
-                isProcessed: false
-            });
         }
         
         document.getElementById('step3Card').style.display = 'block';
@@ -534,18 +522,11 @@
         document.getElementById('finishUploadBtn').style.display = 'none';
     }
     
-    function getTypeName(type) {
-        if (type === 'image') return '图片';
-        if (type === 'pdf') return 'PDF';
-        return '文本';
-    }
-
     // 处理图片/PDF文件选择
     function handleFileSelect(versionId, input) {
         const file = input.files[0];
         if (!file) return;
         
-        // 检查文件大小（200MB限制）
         if (file.size > 200 * 1024 * 1024) {
             alert('文件不能超过200MB');
             return;
@@ -558,24 +539,80 @@
         version.name = file.name.replace(/\.[^/.]+$/, '');
         version.uploaded = true;
         
-        // 显示预览
+        // 显示预览和删除按钮
         const previewDiv = document.getElementById(`preview_${versionId}`);
+        const inputArea = document.getElementById(`inputArea_${versionId}`);
         const statusSpan = document.getElementById(`status_${versionId}`);
         
         if (currentType === 'image') {
             const url = URL.createObjectURL(file);
-            previewDiv.innerHTML = `<img src="${url}" class="image-preview" onclick="window.open('${url}')" title="点击放大"><br><small>${file.name}</small>`;
+            previewDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
+                    <div>
+                        <img src="${url}" class="image-preview" onclick="window.open('${url}')" title="点击放大">
+                        <div><small>${file.name}</small></div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteVersion(${versionId})" title="删除重新上传">🗑️ 删除</button>
+                </div>
+                <div id="ocrPreview_${versionId}" class="ocr-result" style="background:#f0f0e8;">⏳ 等待OCR识别...</div>
+            `;
         } else if (currentType === 'pdf') {
-            previewDiv.innerHTML = `<div style="padding:10px; background:#f0e8dc; border-radius:8px;">📄 ${file.name}<br><small>大小: ${(file.size/1024/1024).toFixed(2)} MB</small></div>`;
+            previewDiv.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <div>📄 ${file.name}<br><small>大小: ${(file.size/1024/1024).toFixed(2)} MB</small></div>
+                    <button class="delete-btn" onclick="deleteVersion(${versionId})" title="删除重新上传">🗑️ 删除</button>
+                </div>
+                <div id="ocrPreview_${versionId}" class="ocr-result" style="background:#f0f0e8;">⏳ 等待OCR识别（PDF将逐页识别）...</div>
+            `;
         }
         
+        inputArea.style.display = 'none';
         statusSpan.innerHTML = '✅ 已上传';
         statusSpan.style.color = '#2a6a3a';
         
         checkAllUploaded();
     }
     
-    // 确认文本版本（直接完成，不需要OCR）
+    // 删除版本，重新上传
+    function deleteVersion(versionId) {
+        const version = versions.find(v => v.id === versionId);
+        if (!version) return;
+        
+        version.file = null;
+        version.content = null;
+        version.name = null;
+        version.uploaded = false;
+        version.isProcessed = false;
+        version.pages = [];
+        
+        const previewDiv = document.getElementById(`preview_${versionId}`);
+        const inputArea = document.getElementById(`inputArea_${versionId}`);
+        const statusSpan = document.getElementById(`status_${versionId}`);
+        
+        previewDiv.innerHTML = '';
+        inputArea.style.display = 'block';
+        
+        if (currentType === 'image') {
+            const fileInput = document.getElementById(`file_${versionId}`);
+            if (fileInput) fileInput.value = '';
+        } else if (currentType === 'pdf') {
+            const fileInput = document.getElementById(`file_${versionId}`);
+            if (fileInput) fileInput.value = '';
+        } else if (currentType === 'text') {
+            const textarea = document.getElementById(`text_${versionId}`);
+            if (textarea) textarea.value = '';
+            const nameInput = document.getElementById(`name_${versionId}`);
+            if (nameInput) nameInput.value = '';
+        }
+        
+        statusSpan.innerHTML = '等待上传';
+        statusSpan.style.color = '#999';
+        
+        document.getElementById('finishUploadBtn').style.display = 'none';
+        checkAllUploaded();
+    }
+    
+    // 确认文本版本
     function confirmTextVersion(versionId) {
         const textarea = document.getElementById(`text_${versionId}`);
         const nameInput = document.getElementById(`name_${versionId}`);
@@ -592,18 +629,24 @@
         version.content = text;
         version.name = nameInput.value.trim() || `文本版本${version.index}`;
         version.uploaded = true;
-        version.isProcessed = true;  // 文本版本直接标记为已处理
+        version.isProcessed = true;
         
-        const statusSpan = document.getElementById(`status_${versionId}`);
-        statusSpan.innerHTML = '✅ 已添加（文本版本，无需OCR）';
-        statusSpan.style.color = '#2a6a3a';
-        
-        // 显示已输入的内容预览
         const previewDiv = document.getElementById(`preview_${versionId}`);
-        if (previewDiv) {
-            const preview = text.length > 100 ? text.substring(0, 100) + '...' : text;
-            previewDiv.innerHTML = `<div class="ocr-result">📝 ${escapeHtml(preview)}</div>`;
-        }
+        const inputArea = document.getElementById(`inputArea_${versionId}`);
+        const statusSpan = document.getElementById(`status_${versionId}`);
+        
+        const preview = text.length > 200 ? text.substring(0, 200) + '...' : text;
+        previewDiv.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
+                <div class="ocr-result" style="flex:1; margin-right:10px;">📝 ${escapeHtml(preview)}</div>
+                <button class="delete-btn" onclick="deleteVersion(${versionId})" title="删除重新上传">🗑️ 删除</button>
+            </div>
+            <div><small>版本名称: ${escapeHtml(version.name)}</small></div>
+        `;
+        
+        inputArea.style.display = 'none';
+        statusSpan.innerHTML = '✅ 已添加';
+        statusSpan.style.color = '#2a6a3a';
         
         checkAllUploaded();
     }
@@ -623,17 +666,13 @@
         }
     }
     
-    // 完成添加，根据是否需要OCR决定下一步
     document.getElementById('finishUploadBtn').addEventListener('click', () => {
-        // 检查是否有图片/PDF版本需要OCR
-        const needOCRVersions = versions.filter(v => (v.type === 'image' || v.type === 'pdf') && !v.isProcessed);
+        const needOCRVersions = versions.filter(v => (v.type === 'image' || v.type === 'pdf') && v.uploaded && !v.isProcessed);
         
         if (needOCRVersions.length > 0) {
-            // 有需要OCR的版本，显示OCR设置界面
             document.getElementById('step4Card').style.display = 'block';
             document.getElementById('step4Card').scrollIntoView({ behavior: 'smooth' });
         } else {
-            // 全部是文本版本，直接进入比对
             goToCompare();
         }
     });
@@ -645,29 +684,13 @@
             this.classList.add('selected');
             selectedOCR = this.getAttribute('data-ocr');
             
-            // 显示/隐藏相应的设置面板
-            document.getElementById('customApiDiv').style.display = selectedOCR === 'custom' ? 'block' : 'none';
-            document.getElementById('baiduApiDiv').style.display = selectedOCR === 'builtin_baidu_free' ? 'block' : 'none';
+            document.getElementById('baiduSettings').style.display = selectedOCR === 'baidu' ? 'block' : 'none';
+            document.getElementById('customSettings').style.display = selectedOCR === 'custom' ? 'block' : 'none';
         });
     });
     
-    // 开始OCR识别
     document.getElementById('startOCRBtn').addEventListener('click', async () => {
-        if (!selectedOCR) {
-            alert('请选择OCR模型');
-            return;
-        }
-        
-        // 验证配置
-        if (selectedOCR === 'custom') {
-            const apiUrl = document.getElementById('customApiUrl').value;
-            if (!apiUrl) {
-                alert('请填写自定义API地址');
-                return;
-            }
-        }
-        
-        if (selectedOCR === 'builtin_baidu_free') {
+        if (selectedOCR === 'baidu') {
             const apiKey = document.getElementById('baiduApiKey').value;
             const secretKey = document.getElementById('baiduSecretKey').value;
             if (!apiKey || !secretKey) {
@@ -676,13 +699,19 @@
             }
         }
         
+        if (selectedOCR === 'custom') {
+            const apiUrl = document.getElementById('customApiUrl').value;
+            if (!apiUrl) {
+                alert('请填写自定义API地址');
+                return;
+            }
+        }
+        
         document.getElementById('step5Card').style.display = 'block';
         document.getElementById('step4Card').style.opacity = '0.5';
-        
         await runOCRForAllVersions();
     });
     
-    // 执行所有版本的OCR
     async function runOCRForAllVersions() {
         const ocrVersions = versions.filter(v => (v.type === 'image' || v.type === 'pdf') && v.file && !v.isProcessed);
         const totalCount = ocrVersions.length;
@@ -694,20 +723,17 @@
         
         let completedCount = 0;
         
-        // 显示进度
         const progressDiv = document.getElementById('ocrProgress');
         progressDiv.innerHTML = `
             <div class="progress-bar"><div class="progress-fill" id="ocrProgressFill"></div></div>
             <div id="ocrProgressText">准备识别 ${totalCount} 个版本...</div>
         `;
         
-        // 显示结果容器
         const resultsContainer = document.getElementById('ocrResultsContainer');
         resultsContainer.innerHTML = '';
         
-        // 逐个处理OCR
         for (const version of ocrVersions) {
-            await processSingleOCR(version, (progress) => {
+            await processSingleOCR(version, () => {
                 completedCount++;
                 const percent = (completedCount / totalCount) * 100;
                 const fillBar = document.getElementById('ocrProgressFill');
@@ -721,7 +747,6 @@
         document.getElementById('gotoCompareBtn').style.display = 'inline-block';
     }
     
-    // 单个OCR处理
     async function processSingleOCR(version, onProgress) {
         version.isProcessing = true;
         displayOCRResult(version, true);
@@ -729,44 +754,83 @@
         try {
             let text = '';
             
-            switch(selectedOCR) {
-                case 'builtin_ocr_space':
-                    text = await ocrSpaceOCR(version.file);
-                    break;
-                case 'builtin_baidu_free':
-                    text = await baiduOCR(version.file);
-                    break;
-                case 'custom':
-                    text = await customOCR(version.file);
-                    break;
-                default:
-                    text = await tesseractOCR(version.file);
+            if (version.type === 'image') {
+                switch(selectedOCR) {
+                    case 'ocrspace':
+                        text = await ocrSpaceOCR(version.file);
+                        break;
+                    case 'baidu':
+                        text = await baiduOCR(version.file);
+                        break;
+                    case 'custom':
+                        text = await customOCR(version.file);
+                        break;
+                    default:
+                        text = await tesseractOCR(version.file);
+                }
+            } else if (version.type === 'pdf') {
+                text = await processPDF(version.file);
             }
             
-            version.content = text || '未识别到文字，请确保图片清晰';
+            if (!text || text.trim() === '') {
+                text = '⚠️ 未识别到文字。可能原因：图片太模糊、文字不清晰。建议手动输入。';
+            }
+            
+            version.content = text;
             version.isProcessing = false;
             version.isProcessed = true;
             
             displayOCRResult(version);
             if (onProgress) onProgress(version);
+            
+            const previewDiv = document.getElementById(`ocrPreview_${version.id}`);
+            if (previewDiv) {
+                const displayText = text.length > 200 ? text.substring(0,200)+'...' : text;
+                previewDiv.innerHTML = displayText;
+            }
             
         } catch (error) {
             console.error('OCR错误:', error);
-            version.content = `识别失败: ${error.message}`;
+            version.content = `❌ 识别失败: ${error.message}`;
             version.isProcessing = false;
             version.isProcessed = true;
             displayOCRResult(version);
             if (onProgress) onProgress(version);
+            
+            const previewDiv = document.getElementById(`ocrPreview_${version.id}`);
+            if (previewDiv) {
+                previewDiv.innerHTML = version.content;
+                previewDiv.style.color = '#8b3a3a';
+            }
         }
     }
     
-    // OCR.space 免费API（每天500次免费）
-    async function ocrSpaceOCR(file) {
+    // PDF处理（使用pdf.js或提示转换）
+    async function processPDF(file) {
+        // 由于浏览器限制，PDF直接OCR需要复杂处理
+        // 提供两种方案：提示用户转换，或使用在线服务
         return new Promise((resolve) => {
+            resolve(`【PDF文件：${file.name}】
+
+⚠️ 浏览器端直接识别PDF需要复杂的处理。
+
+建议方案：
+1. 将PDF转换为图片后上传（推荐）
+2. 使用在线PDF转图片工具
+3. 手动输入文本内容
+
+如需帮助，可以点击"删除重新上传"选择其他方式。`);
+        });
+    }
+    
+    // OCR.space API
+    async function ocrSpaceOCR(file) {
+        return new Promise((resolve, reject) => {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('language', 'chs');
-            formData.append('apikey', 'helloworld');
+            formData.append('OCREngine', '2');
+            formData.append('apikey', 'K87621951688957');
             
             fetch('https://api.ocr.space/parse/image', {
                 method: 'POST',
@@ -774,68 +838,66 @@
             })
             .then(res => res.json())
             .then(data => {
-                if (data.ParsedResults && data.ParsedResults[0]) {
-                    resolve(data.ParsedResults[0].ParsedText);
+                if (data.ErrorMessage) {
+                    reject(new Error(data.ErrorMessage));
+                } else if (data.ParsedResults && data.ParsedResults[0]) {
+                    let text = data.ParsedResults[0].ParsedText;
+                    text = text.replace(/\r\n/g, '\n').trim();
+                    resolve(text);
                 } else {
                     resolve('');
                 }
             })
-            .catch(() => resolve(''));
+            .catch(err => reject(new Error('网络连接失败')));
         });
     }
     
-    // Tesseract.js 本地OCR
+    // Tesseract.js本地OCR
     async function tesseractOCR(file) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            const url = URL.createObjectURL(file);
-            img.src = url;
-            
-            const timeout = setTimeout(() => {
-                URL.revokeObjectURL(url);
-                resolve('');
-            }, 30000);
-            
-            img.onload = () => {
-                URL.revokeObjectURL(url);
-                
-                if (typeof Tesseract === 'undefined') {
+        return new Promise((resolve, reject) => {
+            const loadAndRecognize = () => {
+                if (typeof Tesseract !== 'undefined') {
+                    recognize();
+                } else {
                     const script = document.createElement('script');
                     script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-                    script.onload = () => {
-                        Tesseract.recognize(img, 'chi_sim+eng')
-                            .then(result => {
-                                clearTimeout(timeout);
-                                resolve(result.data.text);
-                            })
-                            .catch(() => {
-                                clearTimeout(timeout);
-                                resolve('');
-                            });
-                    };
-                    script.onerror = () => {
-                        clearTimeout(timeout);
-                        resolve('');
-                    };
+                    script.onload = recognize;
+                    script.onerror = () => reject(new Error('Tesseract.js加载失败'));
                     document.head.appendChild(script);
-                } else {
-                    Tesseract.recognize(img, 'chi_sim+eng')
-                        .then(result => {
-                            clearTimeout(timeout);
-                            resolve(result.data.text);
-                        })
-                        .catch(() => {
-                            clearTimeout(timeout);
-                            resolve('');
-                        });
                 }
             };
             
-            img.onerror = () => {
-                clearTimeout(timeout);
-                URL.revokeObjectURL(url);
-                resolve('');
+            const recognize = () => {
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.src = url;
+                
+                const timeout = setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    reject(new Error('识别超时'));
+                }, 60000);
+                
+                img.onload = () => {
+                    URL.revokeObjectURL(url);
+                    Tesseract.recognize(img, 'chi_sim+eng')
+                        .then(result => {
+                            clearTimeout(timeout);
+                            resolve(result.data.text.trim());
+                        })
+                        .catch(err => {
+                            clearTimeout(timeout);
+                            reject(new Error(err.message));
+                        });
+                };
+                
+                img.onerror = () => {
+                    clearTimeout(timeout);
+                    URL.revokeObjectURL(url);
+                    reject(new Error('图片加载失败'));
+                };
             };
+            
+            loadAndRecognize();
         });
     }
     
@@ -844,15 +906,15 @@
         const apiKey = document.getElementById('baiduApiKey').value;
         const secretKey = document.getElementById('baiduSecretKey').value;
         
-        // 获取access_token
         const tokenRes = await fetch(`https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`);
         const tokenData = await tokenRes.json();
-        const accessToken = tokenData.access_token;
         
-        // 转换图片为base64
+        if (!tokenData.access_token) {
+            throw new Error('获取百度Token失败，请检查API Key');
+        }
+        
         const base64 = await fileToBase64(file);
-        
-        const response = await fetch(`https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=${accessToken}`, {
+        const response = await fetch(`https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=${tokenData.access_token}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: `image=${encodeURIComponent(base64)}`
@@ -861,6 +923,8 @@
         const data = await response.json();
         if (data.words_result) {
             return data.words_result.map(w => w.words).join('\n');
+        } else if (data.error_msg) {
+            throw new Error(data.error_msg);
         }
         return '';
     }
@@ -892,7 +956,7 @@
         });
         
         const data = await response.json();
-        return data.text || data.result || data.data?.text || JSON.stringify(data);
+        return data.text || data.result || data.data?.text || '';
     }
     
     function fileToBase64(file) {
@@ -904,42 +968,20 @@
         });
     }
     
-    // 显示OCR结果
     function displayOCRResult(version, isProcessing = false) {
         const container = document.getElementById('ocrResultsContainer');
         let resultDiv = document.getElementById(`ocrResult_${version.id}`);
-        
         if (!resultDiv) {
             resultDiv = document.createElement('div');
             resultDiv.className = 'version-card';
             resultDiv.id = `ocrResult_${version.id}`;
             container.appendChild(resultDiv);
         }
-        
         if (isProcessing) {
-            resultDiv.innerHTML = `
-                <div class="version-header">
-                    <strong>📖 ${version.name || `版本${version.index}`}</strong>
-                    <span><span class="loading"></span> 识别中...</span>
-                </div>
-                <div class="progress-bar"><div class="progress-fill" style="width: 50%;"></div></div>
-            `;
+            resultDiv.innerHTML = `<div class="version-header"><strong>📖 ${version.name || `版本${version.index}`}</strong><span><span class="loading"></span> 识别中...</span></div><div class="progress-bar"><div class="progress-fill" style="width:50%;"></div></div>`;
         } else {
-            const displayText = version.content.length > 500 ? version.content.substring(0, 500) + '...' : version.content;
-            resultDiv.innerHTML = `
-                <div class="version-header">
-                    <strong>📖 ${version.name || `版本${version.index}`}</strong>
-                    <div>
-                        <button class="btn btn-outline" onclick="editOCRResult(${version.id})">✏️ 人工核查修改</button>
-                    </div>
-                </div>
-                <div class="ocr-result" id="ocrDisplay_${version.id}">${escapeHtml(displayText)}</div>
-                <div id="editArea_${version.id}" style="display:none;">
-                    <textarea id="editText_${version.id}" class="edit-textarea">${escapeHtml(version.content)}</textarea>
-                    <button class="btn" onclick="saveOCRResult(${version.id})">保存修改</button>
-                    <button class="btn btn-outline" onclick="cancelOCRResult(${version.id})">取消</button>
-                </div>
-            `;
+            const displayText = version.content.length > 500 ? version.content.substring(0,500)+'...' : version.content;
+            resultDiv.innerHTML = `<div class="version-header"><strong>📖 ${version.name || `版本${version.index}`}</strong><button class="btn-outline" style="padding:5px 12px;" onclick="editOCRResult(${version.id})">✏️ 人工核查修改</button></div><div class="ocr-result" id="ocrDisplay_${version.id}">${escapeHtml(displayText)}</div><div id="editArea_${version.id}" style="display:none;"><textarea id="editText_${version.id}" class="edit-textarea">${escapeHtml(version.content)}</textarea><button class="btn" onclick="saveOCRResult(${version.id})">保存修改</button><button class="btn btn-outline" onclick="cancelOCRResult(${version.id})">取消</button></div>`;
         }
     }
     
@@ -947,56 +989,34 @@
         const editArea = document.getElementById(`editArea_${id}`);
         if (editArea) editArea.style.display = 'block';
     }
-    
     function saveOCRResult(id) {
         const newText = document.getElementById(`editText_${id}`).value;
         const version = versions.find(v => v.id === id);
         if (version) {
             version.content = newText;
             const displayDiv = document.getElementById(`ocrDisplay_${id}`);
-            if (displayDiv) {
-                const displayText = newText.length > 500 ? newText.substring(0, 500) + '...' : newText;
-                displayDiv.innerHTML = escapeHtml(displayText);
-            }
-            const editArea = document.getElementById(`editArea_${id}`);
-            if (editArea) editArea.style.display = 'none';
+            if (displayDiv) displayDiv.innerHTML = escapeHtml(newText.length>500?newText.substring(0,500)+'...':newText);
+            document.getElementById(`editArea_${id}`).style.display = 'none';
         }
     }
-    
     function cancelOCRResult(id) {
-        const editArea = document.getElementById(`editArea_${id}`);
-        if (editArea) editArea.style.display = 'none';
+        document.getElementById(`editArea_${id}`).style.display = 'none';
     }
     
-    document.getElementById('gotoCompareBtn').addEventListener('click', () => {
-        goToCompare();
-    });
+    document.getElementById('gotoCompareBtn').addEventListener('click', goToCompare);
     
-    // ==================== 进入文本比对 ====================
     function goToCompare() {
-        // 确保所有版本都有内容（文本版本已有，OCR版本已完成）
         const allVersionsReady = versions.every(v => v.content && v.content.trim());
-        
         if (!allVersionsReady) {
             alert('请等待所有版本识别完成');
             return;
         }
-        
-        // 显示版本概览
-        const overviewDiv = document.getElementById('versionsOverview');
-        overviewDiv.innerHTML = `
-            <div class="info-note success">
-                <strong>📚 已准备 ${versions.length} 个版本：</strong><br>
-                ${versions.map(v => `• ${v.name || `版本${v.index}`} (${v.type === 'image' ? '图片OCR' : (v.type === 'pdf' ? 'PDF OCR' : '文本')})`).join('<br>')}
-            </div>
-        `;
-        
+        document.getElementById('versionsOverview').innerHTML = `<div class="info-note success"><strong>📚 已准备 ${versions.length} 个版本：</strong><br>${versions.map(v => `• ${v.name || `版本${v.index}`} (${v.type === 'image' ? '图片OCR' : (v.type === 'pdf' ? 'PDF' : '文本')})`).join('<br>')}</div>`;
         document.getElementById('step6Card').style.display = 'block';
         updateComparison();
         document.getElementById('step6Card').scrollIntoView({ behavior: 'smooth' });
     }
     
-    // ==================== 文本比对功能 ====================
     function switchCompareTab(tabName, element) {
         currentCompareTab = tabName;
         document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
@@ -1004,125 +1024,67 @@
         updateComparison();
     }
     
-    let currentCompareTab = 'compare';
-    
     function updateComparison() {
         const validVersions = versions.filter(v => v.content && v.content.trim());
-        
         if (validVersions.length < 2) {
-            document.getElementById('compareResult').innerHTML = `
-                <div style="text-align:center; padding:40px; color:#999;">
-                    需要至少2个版本才能进行比对（当前 ${validVersions.length} 个）
-                </div>
-            `;
+            document.getElementById('compareResult').innerHTML = `<div style="text-align:center;padding:40px;">需要至少2个版本（当前${validVersions.length}个）</div>`;
             return;
         }
-        
-        if (currentCompareTab === 'compare') {
-            showLineByLineCompare(validVersions);
-        } else if (currentCompareTab === 'diff') {
-            showDiffHighlight(validVersions);
-        } else {
-            showParallelCompare(validVersions);
-        }
+        if (currentCompareTab === 'compare') showLineByLineCompare(validVersions);
+        else if (currentCompareTab === 'diff') showDiffHighlight(validVersions);
+        else showParallelCompare(validVersions);
     }
     
     function showLineByLineCompare(versionsList) {
         const baseVersion = versionsList[0];
         const baseLines = baseVersion.content.split(/[。！？；\n]/);
-        
-        let html = `<div class="compare-result">`;
-        html += `<strong>📖 基准版本：${escapeHtml(baseVersion.name || baseVersion.index)}</strong><br>`;
-        html += `<small>共 ${baseLines.length} 段，显示前40段</small><br><br>`;
-        
+        let html = `<div class="compare-result"><strong>📖 基准版本：${escapeHtml(baseVersion.name || baseVersion.index)}</strong><br><small>共${baseLines.length}段，显示前40段</small><br><br>`;
         let lineCount = 0;
-        for (let i = 0; i < baseLines.length && lineCount < 40; i++) {
+        for (let i=0; i<baseLines.length && lineCount<40; i++) {
             const line = baseLines[i].trim();
-            if (line && line.length > 2) {
+            if (line && line.length>2) {
                 lineCount++;
-                html += `<div style="margin: 12px 0; padding: 10px; background: rgba(255,255,255,0.08); border-radius: 8px;">`;
-                html += `<strong style="color: #e8c88a;">段落 ${lineCount}:</strong><br>`;
-                html += `<span style="color: #ffdd99;">${escapeHtml(line)}</span><br>`;
-                
-                for (let j = 1; j < Math.min(versionsList.length, 4); j++) {
-                    const otherText = versionsList[j].content;
-                    const otherLines = otherText.split(/[。！？；\n]/);
-                    
-                    // 查找相似段落
-                    let matchedLine = '';
-                    for (let k = 0; k < otherLines.length; k++) {
-                        if (otherLines[k].includes(line.substring(0, 15)) || line.includes(otherLines[k].substring(0, 15))) {
-                            if (otherLines[k].trim() !== line) {
-                                matchedLine = otherLines[k];
-                                break;
-                            }
+                html += `<div style="margin:12px 0;padding:10px;background:rgba(255,255,255,0.08);border-radius:8px;"><strong style="color:#e8c88a;">段落${lineCount}:</strong><br><span style="color:#ffdd99;">${escapeHtml(line)}</span><br>`;
+                for (let j=1; j<Math.min(versionsList.length,4); j++) {
+                    const otherLines = versionsList[j].content.split(/[。！？；\n]/);
+                    let matched = '';
+                    for (let k=0; k<otherLines.length; k++) {
+                        if (otherLines[k].includes(line.substring(0,15)) || line.includes(otherLines[k].substring(0,15))) {
+                            if (otherLines[k].trim() !== line) { matched = otherLines[k]; break; }
                         }
                     }
-                    
-                    if (matchedLine) {
-                        html += `<span style="color: #aaffaa;">📖 ${escapeHtml(versionsList[j].name || versionsList[j].index)}:</span> ${escapeHtml(matchedLine.substring(0, 200))}<br>`;
-                    } else if (otherLines[lineCount-1] && otherLines[lineCount-1] !== line) {
-                        html += `<span style="color: #aaffaa;">📖 ${escapeHtml(versionsList[j].name || versionsList[j].index)}:</span> ${escapeHtml(otherLines[lineCount-1]?.substring(0, 200) || '')}<br>`;
-                    }
+                    if (matched) html += `<span style="color:#aaffaa;">📖 ${escapeHtml(versionsList[j].name || versionsList[j].index)}:</span> ${escapeHtml(matched.substring(0,200))}<br>`;
+                    else if (otherLines[lineCount-1] && otherLines[lineCount-1] !== line) html += `<span style="color:#aaffaa;">📖 ${escapeHtml(versionsList[j].name || versionsList[j].index)}:</span> ${escapeHtml(otherLines[lineCount-1]?.substring(0,200)||'')}<br>`;
                 }
                 html += `</div>`;
             }
         }
-        
-        if (lineCount === 0) {
-            html += `<div style="color:#999;">无法分段，请尝试其他对比模式</div>`;
-        }
-        
         html += `</div>`;
         document.getElementById('compareResult').innerHTML = html;
     }
     
     function showDiffHighlight(versionsList) {
-        if (versionsList.length < 2) return;
-        
-        const text1 = versionsList[0].content;
-        const text2 = versionsList[1].content;
-        
-        let html = `<div class="compare-result">`;
-        html += `<strong>🎨 ${escapeHtml(versionsList[0].name || versionsList[0].index)} vs ${escapeHtml(versionsList[1].name || versionsList[1].index)}</strong><br><br>`;
-        
+        if (versionsList.length<2) return;
+        const text1 = versionsList[0].content, text2 = versionsList[1].content;
+        let html = `<div class="compare-result"><strong>🎨 ${escapeHtml(versionsList[0].name||versionsList[0].index)} vs ${escapeHtml(versionsList[1].name||versionsList[1].index)}</strong><br><br>`;
         const maxLen = Math.min(Math.max(text1.length, text2.length), 800);
         let diffHtml = '';
-        let lastWasDiff = false;
-        
-        for (let i = 0; i < maxLen; i++) {
-            const char1 = i < text1.length ? text1[i] : '';
-            const char2 = i < text2.length ? text2[i] : '';
-            
-            if (char1 === char2 && char1) {
-                if (lastWasDiff) diffHtml += ' ';
-                diffHtml += escapeHtml(char1);
-                lastWasDiff = false;
-            } else {
-                if (char1 && char1 !== '\n' && char1 !== ' ') diffHtml += `<span class="diff-remove">${escapeHtml(char1)}</span>`;
-                if (char2 && char2 !== '\n' && char2 !== ' ') diffHtml += `<span class="diff-add">${escapeHtml(char2)}</span>`;
-                lastWasDiff = true;
+        for (let i=0; i<maxLen; i++) {
+            const char1 = i<text1.length?text1[i]:'', char2 = i<text2.length?text2[i]:'';
+            if (char1===char2 && char1) diffHtml += escapeHtml(char1);
+            else {
+                if (char1 && char1!=='\n' && char1!==' ') diffHtml += `<span class="diff-remove">${escapeHtml(char1)}</span>`;
+                if (char2 && char2!=='\n' && char2!==' ') diffHtml += `<span class="diff-add">${escapeHtml(char2)}</span>`;
             }
         }
-        
-        html += `<div style="line-height: 1.8; font-size: 14px; word-break: break-all;">${diffHtml || '两个版本完全相同'}</div>`;
-        html += `<br><small style="opacity:0.7">🔴 红色：版本1独有 | 🟢 绿色：版本2独有</small>`;
-        html += `</div>`;
+        html += `<div style="line-height:1.8;">${diffHtml||'完全相同'}</div><br><small>🔴红色：版本1独有 | 🟢绿色：版本2独有</small></div>`;
         document.getElementById('compareResult').innerHTML = html;
     }
     
     function showParallelCompare(versionsList) {
-        let html = `<div class="compare-result">`;
-        html += `<div style="display: grid; grid-template-columns: repeat(${Math.min(versionsList.length, 3)}, 1fr); gap: 15px;">`;
-        
-        for (let v of versionsList.slice(0, 6)) {
-            html += `
-                <div style="background: rgba(255,255,255,0.05); border-radius: 8px; padding: 12px;">
-                    <strong style="color: #e8c88a; display: block; margin-bottom: 10px;">${escapeHtml(v.name || v.index)}</strong>
-                    <div style="font-size: 12px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;">${escapeHtml(v.content.substring(0, 1500))}</div>
-                    ${v.content.length > 1500 ? '<small style="color:#999;">...内容过长，已截断</small>' : ''}
-                </div>
-            `;
+        let html = `<div class="compare-result"><div style="display:grid; grid-template-columns:repeat(${Math.min(versionsList.length,3)},1fr); gap:15px;">`;
+        for (let v of versionsList.slice(0,6)) {
+            html += `<div style="background:rgba(255,255,255,0.05);border-radius:8px;padding:12px;"><strong style="color:#e8c88a;">${escapeHtml(v.name||v.index)}</strong><div style="font-size:12px; max-height:400px; overflow-y:auto; white-space:pre-wrap;">${escapeHtml(v.content.substring(0,1500))}</div></div>`;
         }
         html += `</div></div>`;
         document.getElementById('compareResult').innerHTML = html;
@@ -1130,45 +1092,21 @@
     
     function exportReport() {
         const validVersions = versions.filter(v => v.content && v.content.trim());
-        if (validVersions.length === 0) {
-            alert('没有可导出的内容');
-            return;
-        }
-        
-        let report = '=== 古籍版本比对报告 ===\n';
-        report += `生成时间：${new Date().toLocaleString()}\n`;
-        report += `版本数量：${validVersions.length}\n`;
-        report += `${'='.repeat(50)}\n\n`;
-        
+        if (validVersions.length===0) { alert('没有可导出的内容'); return; }
+        let report = '=== 古籍版本比对报告 ===\n生成时间：'+new Date().toLocaleString()+'\n版本数量：'+validVersions.length+'\n'+'='.repeat(50)+'\n\n';
         for (let v of validVersions) {
-            report += `【${v.name || `版本${v.index}`}】 (${v.type === 'image' ? '图片OCR' : (v.type === 'pdf' ? 'PDF OCR' : '文本')})\n`;
-            report += `${v.content}\n`;
-            report += `${'='.repeat(50)}\n\n`;
+            report += `【${v.name||`版本${v.index}`}】 (${v.type==='image'?'图片OCR':(v.type==='pdf'?'PDF':'文本')})\n${v.content}\n${'='.repeat(50)}\n\n`;
         }
-        
-        const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+        const blob = new Blob([report], {type:'text/plain;charset=utf-8'});
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `古籍比对报告_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.txt`;
+        link.download = `古籍比对报告_${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.txt`;
         link.click();
         URL.revokeObjectURL(link.href);
     }
     
-    function resetAll() {
-        if (confirm('确定要重新开始吗？当前所有数据将丢失。')) {
-            location.reload();
-        }
-    }
-    
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
+    function resetAll() { if(confirm('确定重新开始？所有数据将丢失')) location.reload(); }
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 </script>
 </body>
 </html>
