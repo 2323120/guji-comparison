@@ -70,3 +70,82 @@ function changeVersionCount() {
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', initVersionContainer);
 </script>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5>第二步：选择OCR识别引擎</h5>
+    </div>
+    <div class="card-body">
+        <div class="mb-3">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="ocrEngine" 
+                       id="ocrTesseract" value="tesseract" checked>
+                <label class="form-check-label" for="ocrTesseract">
+                    <strong>Tesseract.js（免费）</strong>
+                    <small class="text-muted d-block">本地识别，无需网络，速度较慢</small>
+                </label>
+            </div>
+            
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="ocrEngine" 
+                       id="ocrBaidu" value="baidu">
+                <label class="form-check-label" for="ocrBaidu">
+                    <strong>百度OCR API（需配置）</strong>
+                    <small class="text-muted d-block">识别准确率高，需要API Key</small>
+                </label>
+            </div>
+            
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="ocrEngine" 
+                       id="ocrTencent" value="tencent">
+                <label class="form-check-label" for="ocrTencent">
+                    <strong>腾讯OCR API（需配置）</strong>
+                    <small class="text-muted d-block">支持古籍字体，需要API Key</small>
+                </label>
+            </div>
+        </div>
+        
+        <!-- API配置区域（默认隐藏） -->
+        <div id="apiConfigArea" style="display: none;">
+            <div class="border p-3 rounded">
+                <h6>API配置</h6>
+                
+                <div id="baiduConfig" class="api-config">
+                    <div class="mb-2">
+                        <label class="form-label">百度API Key：</label>
+                        <input type="text" class="form-control" id="baiduApiKey" 
+                               placeholder="从百度AI平台获取">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">百度Secret Key：</label>
+                        <input type="text" class="form-control" id="baiduSecretKey">
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="testBaiduAPI()">
+                        测试连接
+                    </button>
+                </div>
+                
+                <div id="tencentConfig" class="api-config" style="display: none;">
+                    <div class="mb-2">
+                        <label class="form-label">腾讯SecretId：</label>
+                        <input type="text" class="form-control" id="tencentSecretId">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">腾讯SecretKey：</label>
+                        <input type="text" class="form-control" id="tencentSecretKey">
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary" onclick="testTencentAPI()">
+                        测试连接
+                    </button>
+                </div>
+                
+                <div class="mt-2">
+                    <small class="text-muted">
+                        🔑 如何获取API Key？
+                        <a href="https://ai.baidu.com/tech/ocr" target="_blank">百度OCR</a> |
+                        <a href="https://cloud.tencent.com/product/ocr" target="_blank">腾讯OCR</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
