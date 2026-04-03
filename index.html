@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古籍版本智能比对系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            padding: 30px 0;
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 300px;
+        }
+        .panel h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #4a6491;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .panel h2 i {
+            color: #4a6491;
+        }
+        .upload-area {
+            border: 3px dashed #aaa;
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            background-color: #fafafa;
+        }
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #4a6491;
+            background-color: #edf2f7;
+        }
+        .upload-area i {
+            font-size: 3rem;
+            color: #7b8a9c;
+            margin-bottom: 15px;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .file-item {
+            background: #f1f5f9;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-name {
+            font-weight: 500;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-size {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .btn {
+            background-color: #4a6491;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background-color: #3a5479;
+        }
+        .btn:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .version-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .version-card {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .version-card.selected {
+            border-color: #4a6491;
+            background-color: #e8eff7;
+            font-weight: bold;
+        }
+        .version-card input {
+            margin-right: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: vertical;
+            margin-bottom: 15px;
+            font-family: 'SimSun', 'NSimSun', serif;
+        }
+        .diff-result {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            font-family: 'SimSun', 'NSimSun', serif;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .ins {
+            background-color: #d4edda;
+            text-decoration: underline;
+        }
+        .del {
+            background-color: #f8d7da;
+            text-decoration: line-through;
+        }
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+        }
+        .tab.active {
+            border-bottom-color: #4a6491;
+            color: #4a6491;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .page-viewer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-start;
+        }
+        .image-container {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+        .page-image {
+            max-width: 100%;
+            max-height: 500px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        .ocr-text-container {
+            flex: 2;
+            min-width: 300px;
+        }
+        .page-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .alert-info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .alert-warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4a6491;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+        .api-config {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            border-left: 4px solid #4a6491;
+        }
+        .api-config input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-book-open"></i> 古籍版本智能比对系统</h1>
+        <p class="subtitle">上传古籍图像、PDF或直接输入文本，支持多版本比对与OCR人工核查。完全在浏览器中运行，保护您的数据隐私。</p>
+    </header>
+
+    <div class="container">
+        <!-- 左侧：上传与OCR面板 -->
+        <div class="panel">
+            <h2><i class="fas fa-cloud-upload-alt"></i> 第一步：上传文件或输入文本</h2>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 支持上传图像（JPG/PNG）或PDF文件（≤100MB），或直接在下方文本框输入文本。系统使用Tesseract.js进行OCR识别，完全在您的浏览器中运行。
+            </div>
+
+            <div class="upload-area" id="dropArea">
+                <i class="fas fa-file-upload"></i>
+                <h3>拖放文件到此处，或点击选择</h3>
+                <p>支持单页图像、多页PDF或文本文件</p>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf,.jpg,.jpeg,.png,.txt" multiple>
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-folder-open"></i> 选择文件
+                </button>
+            </div>
+
+            <div id="fileList" class="file-list"></div>
+
+            <div class="api-config">
+                <h4><i class="fas fa-cog"></i> 自定义OCR API（可选）</h4>
+                <p>如需更高精度，可调用外部OCR服务（需自行获取API密钥）</p>
+                <input type="text" id="apiEndpoint" placeholder="API端点 URL (例如: https://api.ocr.com/v1/recognize)">
+                <input type="text" id="apiKey" placeholder="API密钥">
+                <button class="btn btn-secondary" onclick="useCustomOCR()">使用自定义API</button>
+            </div>
+
+            <h3 style="margin-top: 25px;">或直接输入文本：</h3>
+            <textarea id="directText" placeholder="在此处直接粘贴或输入古籍文本..."></textarea>
+            
+            <button class="btn" id="processBtn" onclick="processFiles()">
+                <i class="fas fa-play"></i> 开始处理与识别
+            </button>
+            <div id="ocrProgress" class="alert alert-warning hidden">
+                <span class="loading"></span> <span id="progressText">正在处理中，请稍候...</span>
+            </div>
+        </div>
+
+        <!-- 右侧：版本比对面板 -->
+        <div class="panel">
+            <h2><i class="fas fa-code-branch"></i> 第二步：版本比对</h2>
+            
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> 最多支持6个版本同时比对。请为每个版本输入或选择文本。
+            </div>
+
+            <div class="version-selector" id="versionSelector">
+                <!-- 版本选项将通过JavaScript动态生成 -->
+            </div>
+
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('compare')">文本比对</div>
+                <div class="tab" onclick="switchTab('review')">人工核查</div>
+            </div>
+
+            <!-- 文本比对标签页 -->
+            <div id="compareTab" class="tab-content active">
+                <div id="versionInputs">
+                    <!-- 版本输入框将通过JavaScript动态生成 -->
+                </div>
+                <button class="btn" onclick="performComparison()">
+                    <i class="fas fa-balance-scale"></i> 执行比对
+                </button>
+                
+                <h3 style="margin-top: 25px;">比对结果：</h3>
+                <div id="diffOutput" class="diff-result">
+                    比对结果将显示在这里。差异部分将以<span class="ins">绿色背景（添加）</span>和<span class="del">红色背景（删除）</span>高亮显示。
+                </div>
+            </div>
+
+            <!-- 人工核查标签页 -->
+            <div id="reviewTab" class="tab-content">
+                <div class="alert alert-warning">
+                    <i class="fas fa-edit"></i> 在此处逐页核查OCR识别结果。左侧显示原始图像，右侧显示识别文本，可直接编辑。
+                </div>
+                
+                <div class="page-viewer">
+                    <div class="image-container">
+                        <h4>原始图像</h4>
+                        <img id="pageImage" class="page-image" src="" alt="当前页图像">
+                        <div class="page-nav">
+                            <button class="btn btn-secondary" onclick="prevPage()"><i class="fas fa-chevron-left"></i> 上一页</button>
+                            <span id="pageIndicator">第 <span id="currentPage">1</span> 页 / 共 <span id="totalPages">1</span> 页</span>
+                            <button class="btn btn-secondary" onclick="nextPage()">下一页 <i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="ocr-text-container">
+                        <h4>OCR识别文本（可直接编辑）</h4>
+                        <textarea id="editableOcrText" placeholder="识别文本将显示在这里..."></textarea>
+                        <button class="btn" onclick="savePageEdit()"><i class="fas fa-save"></i> 保存当前页修改</button>
+                        <button class="btn btn-secondary" onclick="finalizeReview()"><i class="fas fa-check-double"></i> 完成核查，进入比对</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>古籍版本智能比对系统 &copy; 2026 | 基于GitHub Pages构建 | 使用Tesseract.js与diff-match-patch库</p>
+        <p>提示：所有处理均在您的浏览器本地完成，数据不会上传至任何服务器。</p>
+    </footer>
+
+    <!-- 引入必要的JavaScript库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff-match-patch/20121119/diff_match_patch.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        // 全局变量
+        let uploadedFiles = [];
+        let ocrResults = [];
+        let currentPage = 0;
+        let totalPages = 1;
+        let selectedVersions = new Set([0, 1]); // 默认选择前两个版本
+
+        // 初始化版本选择器
+        function initVersionSelector() {
+            const selector = document.getElementById('versionSelector');
+            const inputs = document.getElementById('versionInputs');
+            selector.innerHTML = '';
+            inputs.innerHTML = '';
+            
+            for (let i = 0; i < 6; i++) {
+                // 版本选择卡片
+                const card = document.createElement('div');
+                card.className = `version-card ${selectedVersions.has(i) ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <input type="checkbox" id="version${i}" ${selectedVersions.has(i) ? 'checked' : ''} 
+                           onchange="toggleVersion(${i})">
+                    <label for="version${i}">版本 ${String.fromCharCode(65 + i)}</label>
+                `;
+                selector.appendChild(card);
+                
+                // 版本输入框
+                const textarea = document.createElement('textarea');
+                textarea.id = `versionText${i}`;
+                textarea.placeholder = `输入版本 ${String.fromCharCode(65 + i)} 的文本...`;
+                textarea.style.display = selectedVersions.has(i) ? 'block' : 'none';
+                inputs.appendChild(textarea);
+            }
+        }
+
+        function toggleVersion(index) {
+            const checkbox = document.getElementById(`version${index}`);
+            const textarea = document.getElementById(`versionText${index}`);
+            
+            if (checkbox.checked) {
+                selectedVersions.add(index);
+                textarea.style.display = 'block';
+            } else {
+                selectedVersions.delete(index);
+                textarea.style.display = 'none';
+            }
+            
+            // 更新卡片样式
+            document.querySelectorAll('.version-card')[index].classList.toggle('selected', checkbox.checked);
+        }
+
+        function switchTab(tabName) {
+            // 切换标签页
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`${tabName}Tab`).classList.add('active');
+        }
+
+        // 文件上传处理
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileList = document.getElementById('fileList');
+
+        dropArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropArea.classList.add('dragover');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('dragover');
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            uploadedFiles = [];
+            fileList.innerHTML = '';
+            
+            for (let file of files) {
+                if (file.size > 100 * 1024 * 1024) {
+                    alert(`文件 ${file.name} 超过100MB限制，已跳过。`);
+                    continue;
+                }
+                
+                uploadedFiles.push(file);
+                
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                `;
+                fileList.appendChild(item);
+            }
+            
+            if (uploadedFiles.length > 0) {
+                document.getElementById('directText').placeholder = "已选择文件，将优先处理文件...";
+            }
+        }
+
+        // OCR处理函数
+        async function processFiles() {
+            const processBtn = document.getElementById('processBtn');
+            const progressDiv = document.getElementById('ocrProgress');
+            const progressText = document.getElementById('progressText');
+            
+            processBtn.disabled = true;
+            progressDiv.classList.remove('hidden');
+            
+            ocrResults = [];
+            
+            // 如果有直接输入的文本，优先使用
+            const directText = document.getElementById('directText').value.trim();
+            if (directText) {
+                ocrResults.push({
+                    text: directText,
+                    pages: [{ image: null, text: directText }]
+                });
+                progressText.textContent = '已使用直接输入的文本。';
+            }
+            
+            // 处理上传的文件
+            if (uploadedFiles.length > 0) {
+                for (let i = 0; i < uploadedFiles.length; i++) {
+                    const file = uploadedFiles[i];
+                    progressText.textContent = `正在处理文件: ${file.name} (${i+1}/${uploadedFiles.length})`;
+                    
+                    if (file.type === 'application/pdf') {
+                        await processPDF(file);
+                    } else if (file.type.startsWith('image/')) {
+                        await processImage(file);
+                    } else if (file.type === 'text/plain') {
+                        const text = await file.text();
+                        ocrResults.push({
+                            text: text,
+                            pages: [{ image: null, text: text }]
+                        });
+                    }
+                }
+            }
+            
+            // 更新版本输入框
+            for (let i = 0; i < Math.min(6, ocrResults.length); i++) {
+                const textarea = document.getElementById(`versionText${i}`);
+                if (textarea) {
+                    textarea.value = ocrResults[i].text;
+                }
+            }
+            
+            // 如果OCR结果有页面图像，显示人工核查界面
+            if (ocrResults.some(r => r.pages.some(p => p.image))) {
+                progressText.textContent = '处理完成！已切换到人工核查界面。';
+                setupReviewInterface();
+                switchTab('review');
+            } else {
+                progressText.textContent = '处理完成！请进行版本比对。';
+                switchTab('compare');
+            }
+            
+            setTimeout(() => {
+                progressDiv.classList.add('hidden');
+                processBtn.disabled = false;
+            }, 1500);
+        }
+
+        async function processImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const imageUrl = e.target.result;
+                    
+                    // 使用Tesseract.js进行OCR
+                    progressText.textContent = `正在进行OCR识别: ${file.name}`;
+                    
+                    const worker = await Tesseract.createWorker('chi_sim+chi_tra'); // 简体中文+繁体中文
+                    const { data: { text } } = await worker.recognize(imageUrl);
+                    await worker.terminate();
+                    
+                    ocrResults.push({
+                        text: text,
+                        pages: [{ image: imageUrl, text: text }]
+                    });
+                    
+                    resolve();
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function processPDF(file) {
+            // 简化处理：将PDF转换为图像（第一页）
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const typedArray = new Uint8Array(e.target.result);
+                    
+                    // 使用pdf.js加载PDF
+                    const loadingTask = pdfjsLib.getDocument(typedArray);
+                    const pdf = await loadingTask.promise;
+                    totalPages = pdf.numPages;
+                    
+                    let fullText = '';
+                    const pages = [];
+                    
+                    // 只处理前5页以节省时间
+                    const pagesToProcess = Math.min(5, totalPages);
+                    
+                    for (let i = 1; i <= pagesToProcess; i++) {
+                        progressText.textContent = `处理PDF: ${file.name} (第${i}/${pagesToProcess}页)`;
+                        
+                        const page = await pdf.getPage(i);
+                        const viewport = page.getViewport({ scale: 2.0 });
+                        
+                        // 创建canvas渲染PDF页面
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        
+                        await page.render({
+                            canvasContext: context,
+                            viewport: viewport
+                        }).promise;
+                        
+                        const imageUrl = canvas.toDataURL('image/jpeg');
+                        
+                        // 对渲染的图像进行OCR
+                        const worker = await Tesseract.createWorker('chi_sim+chi_tra');
+                        const { data: { text } } = await worker.recognize(imageUrl);
+                        await worker.terminate();
+                        
+                        fullText += `\n\n--- 第 ${i} 页 ---\n${text}`;
+                        pages.push({ image: imageUrl, text: text });
+                    }
+                    
+                    ocrResults.push({
+                        text: fullText,
+                        pages: pages
+                    });
+                    
+                    resolve();
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function setupReviewInterface() {
+            if (ocrResults.length > 0 && ocrResults[0].pages.length > 0) {
+                currentPage = 0;
+                totalPages = ocrResults[0].pages.length;
+                updatePageView();
+            }
+        }
+
+        function updatePageView() {
+            if (ocrResults.length === 0) return;
+            
+            const page = ocrResults[0].pages[currentPage];
+            document.getElementById('pageImage').src = page.image || '';
+            document.getElementById('editableOcrText').value = page.text;
+            document.getElementById('currentPage').textContent = currentPage + 1;
+            document.getElementById('totalPages').textContent = totalPages;
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                updatePageView();
+            }
+        }
+
+        function nextPage() {
+            if (currentPage < totalPages - 1) {
+                currentPage++;
+                updatePageView();
+            }
+        }
+
+        function savePageEdit() {
+            if (ocrResults.length === 0) return;
+            
+            const editedText = document.getElementById('editableOcrText').value;
+            ocrResults[0].pages[currentPage].text = editedText;
+            
+            // 更新完整文本
+            let fullText = '';
+            for (const page of ocrResults[0].pages) {
+                fullText += page.text + '\n\n';
+            }
+            ocrResults[0].text = fullText;
+            
+            // 更新版本输入框
+            document.getElementById('versionText0').value = fullText;
+            
+            alert('当前页修改已保存！');
+        }
+
+        function finalizeReview() {
+            alert('核查完成！已切换到文本比对界面。');
+            switchTab('compare');
+        }
+
+        // 文本比对函数
+        function performComparison() {
+            const selected = Array.from(selectedVersions).sort();
+            if (selected.length < 2) {
+                alert('请至少选择两个版本进行比对。');
+                return;
+            }
+            
+            const texts = [];
+            for (const idx of selected) {
+                const textarea = document.getElementById(`versionText${idx}`);
+                if (textarea) {
+                    texts.push(textarea.value.trim());
+                }
+            }
+            
+            if (texts.length < 2) {
+                alert('请确保所选版本都有文本内容。');
+                return;
+            }
+            
+            // 使用第一个版本作为基准进行比对
+            let resultHtml = `<h4>比对基准：版本 ${String.fromCharCode(65 + selected}</h4>`;
+            
+            for (let i = 1; i < texts.length; i++) {
+                const diff = compareTexts(texts[0], texts[i]);
+                resultHtml += `<h4>与版本 ${String.fromCharCode(65 + selected[i])} 的差异：</h4>`;
+                resultHtml += diff;
+                resultHtml += '<hr style="margin: 20px 0;">';
+            }
+            
+            document.getElementById('diffOutput').innerHTML = resultHtml;
+        }
+
+        function compareTexts(text1, text2) {
+            const dmp = new diff_match_patch();
+            const diffs = dmp.diff_main(text1, text2);
+            dmp.diff_cleanupSemantic(diffs);
+            
+            let html = '';
+            for (const [op, text] of diffs) {
+                if (op === 0) {
+                    html += text;
+                } else if (op === 1) {
+                    html += `<span class="ins">${text}</span>`;
+                } else if (op === -1) {
+                    html += `<span class="del">${text}</span>`;
+                }
+            }
+            return html;
+        }
+
+        function useCustomOCR() {
+            const endpoint = document.getElementById('apiEndpoint').value;
+            const key = document.getElementById('apiKey').value;
+            
+            if (!endpoint || !key) {
+                alert('请填写完整的API端点和密钥。');
+                return;
+            }
+            
+            alert(`已设置为使用自定义OCR API：${endpoint}\n注意：此演示版本未实现实际API调用，需您自行开发集成。`);
+        }
+
+        // 页面加载时初始化
+        window.onload = function() {
+            initVersionSelector();
+            
+            // 显示一些示例文本
+            document.getElementById('versionText0').value = `【示例文本】\n《论语》学而第一\n子曰：「学而时习之，不亦说乎？有朋自远方来，不亦乐乎？人不知而不愠，不亦君子乎？」`;
+            document.getElementById('versionText1').value = `【示例文本】\n《论语》学而第一\n子曰：「学而时习之，不亦悦乎？有朋自远方来，不亦乐乎？人不知而不愠，不亦君子乎？」`;
+            
+            // 初始比对
+            setTimeout(performComparison, 500);
+        };
+    </script>
+</body>
+</html>
