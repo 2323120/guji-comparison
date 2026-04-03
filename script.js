@@ -603,3 +603,44 @@ async function processAllImages() {
         alert('处理失败: ' + error.message);
     }
 }
+// 文件大小验证
+function validateFileSize(file) {
+    const maxSize = 200 * 1024 * 1024; // 200MB
+    
+    if (file.size > maxSize) {
+        const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+        throw new Error(`文件大小 ${sizeMB}MB 超过200MB限制`);
+    }
+    
+    return true;
+}
+
+// 在文件上传时验证
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.version-file').forEach(input => {
+        input.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                try {
+                    validateFileSize(file);
+                    // 显示文件信息
+                    const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+                    const infoDiv = this.parentElement.querySelector('.file-info');
+                    
+                    if (!infoDiv) {
+                        const div = document.createElement('div');
+                        div.className = 'file-info small text-success mt-1';
+                        this.parentElement.appendChild(div);
+                    }
+                    
+                    this.parentElement.querySelector('.file-info').textContent = 
+                        `✅ ${file.name} (${sizeMB}MB)`;
+                        
+                } catch (error) {
+                    alert(error.message);
+                    this.value = ''; // 清空选择
+                }
+            }
+        });
+    });
+});
