@@ -397,3 +397,209 @@ async function processAllImages() {
         alert('识别失败: ' + error.message);
     }
 }
+// PDF处理相关函数
+async function processPDFFile(pdfFile, versionNum) {
+    if (pdfFile.size > 200 * 1024 * 1024) {
+        throw new Error(`PDF文件超过200MB限制，当前大小：${(pdfFile.size / 1024 / 1024).toFixed(2)}MB`);
+    }
+    
+    showLoading(`正在处理PDF版本 ${versionNum}...`);
+    
+    try {
+        // 使用pdf.js处理PDF
+        const pdfText = await extractTextFromPDF(pdfFile);
+        
+        // 如果PDF有多个页面，让用户选择页面
+        if (pdfText.pages.length > 1) {
+            const selectedPages = await selectPDFPages(pdfText.pages, versionNum);
+            return selectedPages.join('\n\n--- 页面分隔 ---\n\n');
+        } else {
+            return pdfText.pages[0].text;
+        }
+        
+    } catch (error) {
+        console.error('PDF处理错误:', error);
+        throw new Error(`PDF处理失败: ${error.message}`);
+    }
+}
+
+// 提取PDF文本
+async function extractTextFromPDF(pdfFile) {
+    // 动态加载pdf.js库
+    if (!window.pdfjsLib) {
+        await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+        window.pdfjsLib = pdfjsLib;
+        
+        // 设置worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 
+            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    
+    const arrayBuffer = await pdfFile.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    
+    const pages = [];
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        
+        const pageText = textContent.items
+            .map(item => item.str)
+            .join(' ');
+        
+        pages.push({
+            pageNum: i,
+            text: pageText,
+            preview: pageText.substring(0, 100) + '...'
+        });
+    }
+    
+    return {
+        totalPages: pdf.numPages,
+        pages: pages
+    };
+}
+
+// 让用户选择PDF页面
+async function selectPDFPages(pages, versionNum) {
+    return new Promise((resolve) => {
+        // 创建页面选择对话框
+        const modalHtml = `
+            <div class="modal fade" id="pdfPageModal${versionNum}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">选择PDF页面 - 版本 ${versionNum}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>共 ${pages.length} 页，请选择要识别的页面：</p>
+                            <div class="row">
+                                ${pages.map((page, index) => `
+                                    <div class="col-md-6 mb-2">
+                                        <div class="form-check">
+                                            <input class="form-check-input page-checkbox" 
+                                                   type="checkbox" id="page${index}" 
+                                                   value="${index}" checked>
+                                            <label class="form-check-label" for="page${index}">
+                                                第${page.pageNum}页：
+                                                <small class="text-muted">${page.preview}</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="selectAllPages(${versionNum})">
+                                    全选
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="deselectAllPages(${versionNum})">
+                                    全不选
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                            <button type="button" class="btn btn-primary" onclick="confirmPages(${versionNum})">
+                                确认选择
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 添加到页面
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // 显示模态框
+        const modal = new bootstrap.Modal(document.getElementById(`pdfPageModal${versionNum}`));
+        modal.show();
+        
+        // 设置确认回调
+        window.confirmPages = function(vNum) {
+            if (vNum === versionNum) {
+                const selected = [];
+                document.querySelectorAll(`#pdfPageModal${versionNum} .page-checkbox:checked`).forEach(checkbox => {
+                    const pageIndex = parseInt(checkbox.value);
+                    selected.push(pages[pageIndex].text);
+                });
+                
+                modal.hide();
+                document.getElementById(`pdfPageModal${versionNum}`).remove();
+                
+                if (selected.length === 0) {
+                    alert('请至少选择一个页面');
+                    return;
+                }
+                
+                resolve(selected);
+            }
+        };
+    });
+}
+
+// 动态加载脚本
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
+// 修改processAllImages函数，支持PDF
+async function processAllImages() {
+    const versionCount = parseInt(document.getElementById('versionCount').value);
+    const files = document.querySelectorAll('.version-file');
+    const texts = document.querySelectorAll('.version-text');
+    
+    showLoading('正在处理多个版本，请稍候...');
+    
+    try {
+        const results = [];
+        for (let i = 0; i < versionCount; i++) {
+            const file = files[i]?.files[0];
+            const textArea = texts[i];
+            
+            let text = textArea.value.trim();
+            
+            // 如果有上传文件且文本区域为空
+            if (file && !text) {
+                if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+                    // 处理PDF文件
+                    text = await processPDFFile(file, i + 1);
+                } else {
+                    // 处理图片文件
+                    text = await recognizeText(file, currentOCRConfig.engine);
+                }
+                
+                textArea.value = text;
+                updateProgress(i + 1, versionCount);
+            }
+            
+            const nameInput = document.querySelector(`input[data-version="${i + 1}"]`);
+            const versionName = nameInput?.value || `版本 ${i + 1}`;
+            
+            results.push({
+                id: i + 1,
+                name: versionName,
+                text: text || textArea.value,
+                fileType: file?.type || 'text'
+            });
+        }
+        
+        hideLoading();
+        window.versionResults = results;
+        
+        alert(`成功处理 ${results.length} 个版本！`);
+        
+    } catch (error) {
+        console.error('处理错误:', error);
+        hideLoading();
+        alert('处理失败: ' + error.message);
+    }
+}
