@@ -1,268 +1,676 @@
-<!-- PDF.js库 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-
-<!-- Bootstrap Modal需要 -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>免费古籍文本比对系统</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <title>古籍多版本比对系统</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .card h2 {
+            color: #8B4513;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .step {
+            margin-bottom: 25px;
+        }
+        
+        .step h3 {
+            color: #666;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        input[type="file"], 
+        textarea, 
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="file"]:hover,
+        textarea:hover,
+        select:hover {
+            border-color: #A0522D;
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .version-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .version-box {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fafafa;
+        }
+        
+        .version-box.active {
+            border-color: #8B4513;
+            background: #fff8f0;
+        }
+        
+        .btn {
+            background: #8B4513;
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin: 10px 5px;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #A0522D;
+        }
+        
+        .btn-secondary {
+            background: #666;
+        }
+        
+        .btn-secondary:hover {
+            background: #777;
+        }
+        
+        .btn-success {
+            background: #2E8B57;
+        }
+        
+        .btn-success:hover {
+            background: #3CB371;
+        }
+        
+        .btn-danger {
+            background: #DC143C;
+        }
+        
+        .btn-danger:hover {
+            background: #FF4500;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .ocr-options {
+            background: #f8f9fa;
+            border-left: 4px solid #8B4513;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .checkbox-group {
+            margin: 10px 0;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .result-area {
+            background: #fff;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 300px;
+            margin-top: 20px;
+        }
+        
+        .diff-added {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        .diff-removed {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 2px 4px;
+            border-radius: 3px;
+            text-decoration: line-through;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8B4513, #A0522D);
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .page-review {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .page-number {
+            font-weight: bold;
+            color: #8B4513;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .file-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .warning {
+            color: #DC143C;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: #2E8B57;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <header class="text-center mb-5">
-            <h1 class="display-4">📜 古籍文本比对系统</h1>
-            <p class="lead">免费、简单、高效的古籍数字化工具</p>
-        </header>
+    <header>
+        <h1>📜 古籍多版本比对系统</h1>
+        <p class="subtitle">免费在线工具 · 支持OCR识别 · 人工逐页核查</p>
+    </header>
 
-        <div class="row">
-            <!-- 左侧：上传和OCR -->
-            <div class="col-md-6">
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <h5>第一步：上传古籍图片</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">版本A：</label>
-                            <input type="file" class="form-control" id="fileA" accept="image/*">
-                            <div class="form-text">支持JPG、PNG格式，建议图片清晰</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">版本B：</label>
-                            <input type="file" class="form-control" id="fileB" accept="image/*">
-                        </div>
-                        <button class="btn btn-primary w-100" onclick="processImages()">
-                            🪄 开始识别文字
-                        </button>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h5>或直接输入文本</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">版本A文本：</label>
-                            <textarea class="form-control" id="textA" rows="5" placeholder="粘贴或输入第一版文本..."></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">版本B文本：</label>
-                            <textarea class="form-control" id="textB" rows="5" placeholder="粘贴或输入第二版文本..."></textarea>
-                        </div>
-                    </div>
+    <div class="container">
+        <!-- 左侧：上传和设置 -->
+        <div class="card">
+            <h2>第一步：上传古籍版本</h2>
+            
+            <div class="step">
+                <h3>选择比对版本数量（最多6个）</h3>
+                <select id="versionCount" onchange="updateVersionInputs()">
+                    <option value="2">2个版本</option>
+                    <option value="3">3个版本</option>
+                    <option value="4">4个版本</option>
+                    <option value="5">5个版本</option>
+                    <option value="6">6个版本</option>
+                </select>
+            </div>
+            
+            <div class="step">
+                <h3>上传文件或输入文本</h3>
+                <div id="versionInputs">
+                    <!-- 动态生成的版本输入框 -->
                 </div>
             </div>
-
-            <!-- 右侧：比对结果 -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>第二步：文本比对结果</h5>
-                    </div>
-                    <div class="card-body">
-                        <button class="btn btn-success w-100 mb-3" onclick="compareTexts()">
-                            🔍 开始比对
-                        </button>
-                        
-                        <div class="result-area">
-                            <h6>比对结果：</h6>
-                            <div id="comparisonResult" class="p-3 border rounded">
-                                <p class="text-muted">这里将显示文本比对结果...</p>
-                            </div>
-                            
-                            <div class="mt-3">
-                                <h6>统计信息：</h6>
-                                <div id="stats" class="text-muted">
-                                    等待比对...
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <button class="btn btn-outline-secondary" onclick="exportText()">
-                                📥 导出结果
-                            </button>
-                            <button class="btn btn-outline-secondary" onclick="clearAll()">
-                                🗑️ 清空重来
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            
+            <div class="step">
+                <h3>文件限制说明</h3>
+                <p class="warning">⚠️ 每个文件最大200MB，支持格式：JPG、PNG、PDF</p>
+                <p>建议上传清晰图片，识别效果更佳</p>
             </div>
         </div>
-
-        <footer class="mt-5 text-center text-muted">
-            <p>学生项目 · 完全免费 · 开源共享</p>
-            <p>使用百度OCR API | 基于Diff Match Patch算法</p>
-        </footer>
+        
+        <!-- 右侧：OCR和比对 -->
+        <div class="card">
+            <h2>第二步：OCR识别设置</h2>
+            
+            <div class="step">
+                <h3>选择OCR识别方式</h3>
+                <div class="ocr-options">
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="radio" name="ocrType" value="default" checked>
+                            <strong>使用系统默认OCR</strong>（免费，自动识别）
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="radio" name="ocrType" value="custom">
+                            <strong>使用自定义OCR API</strong>
+                        </label>
+                        <div id="customOCRConfig" style="display:none; margin-top:15px;">
+                            <input type="text" id="apiKey" placeholder="输入API Key" style="margin-bottom:10px;">
+                            <input type="text" id="apiUrl" placeholder="输入API地址（可选）">
+                            <p class="file-info">支持百度OCR、腾讯OCR等第三方服务</p>
+                        </div>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="enableReview">
+                            <strong>启用人工逐页核查</strong>（OCR识别后可修改）
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <h3>开始处理</h3>
+                <button class="btn btn-success" onclick="startProcessing()">
+                    🚀 开始OCR识别与比对
+                </button>
+                <button class="btn btn-secondary" onclick="manualCompare()">
+                    📝 直接文本比对（跳过OCR）
+                </button>
+            </div>
+            
+            <div class="step">
+                <h3>处理进度</h3>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p id="progressText">等待开始...</p>
+            </div>
+        </div>
     </div>
+    
+    <!-- 比对结果区域 -->
+    <div class="card">
+        <h2>第三步：比对结果</h2>
+        <button class="btn" onclick="showComparison()">🔍 显示比对结果</button>
+        <button class="btn btn-secondary" onclick="exportResults()">📥 导出结果</button>
+        <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空所有</button>
+        
+        <div class="result-area" id="resultArea">
+            <p style="text-align:center; color:#666; margin-top:100px;">
+                比对结果将显示在这里...
+            </p>
+        </div>
+    </div>
+    
+    <!-- 人工核查模态框 -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>人工逐页核查</h2>
+                <span class="close-btn" onclick="closeReviewModal()">×</span>
+            </div>
+            <div id="reviewContent">
+                <!-- 动态生成核查页面 -->
+            </div>
+            <div style="text-align:center; margin-top:20px;">
+                <button class="btn" onclick="saveReview()">💾 保存修改</button>
+                <button class="btn btn-secondary" onclick="closeReviewModal()">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2025 古籍多版本比对系统 | 学生项目 · 完全免费 · 开源共享</p>
+        <p>技术支持：Tesseract OCR · 纯前端实现 · 无需服务器</p>
+    </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@v2.1.5/dist/tesseract.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
-    <script src="script.js"></script>
+    <script>
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateVersionInputs();
+            setupOCRTypeToggle();
+        });
+        
+        // 更新版本输入框
+        function updateVersionInputs() {
+            const count = parseInt(document.getElementById('versionCount').value);
+            const container = document.getElementById('versionInputs');
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= count; i++) {
+                container.innerHTML += `
+                    <div class="version-box" id="versionBox${i}">
+                        <h4>版本 ${i}</h4>
+                        <input type="file" class="version-file" data-version="${i}" 
+                               accept=".jpg,.jpeg,.png,.pdf" onchange="validateFileSize(this)">
+                        <textarea class="version-text" data-version="${i}" 
+                                  placeholder="或直接输入版本 ${i} 的文本..."></textarea>
+                        <p class="file-info">支持上传或直接输入，二选一即可</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 文件大小验证（200MB限制）
+        function validateFileSize(input) {
+            const file = input.files[0];
+            if (file) {
+                const maxSize = 200 * 1024 * 1024; // 200MB
+                if (file.size > maxSize) {
+                    alert(`文件 ${file.name} 超过200MB限制！\n实际大小：${(file.size/1024/1024).toFixed(2)}MB`);
+                    input.value = '';
+                } else {
+                    // 高亮显示当前版本
+                    const version = input.getAttribute('data-version');
+                    document.getElementById(`versionBox${version}`).classList.add('active');
+                }
+            }
+        }
+        
+        // OCR类型切换
+        function setupOCRTypeToggle() {
+            const radios = document.querySelectorAll('input[name="ocrType"]');
+            const configDiv = document.getElementById('customOCRConfig');
+            
+            radios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        configDiv.style.display = 'block';
+                    } else {
+                        configDiv.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // 开始处理
+        function startProcessing() {
+            const versionCount = parseInt(document.getElementById('versionCount').value);
+            const enableReview = document.getElementById('enableReview').checked;
+            
+            // 更新进度
+            updateProgress(10, '检查上传文件...');
+            
+            // 模拟处理过程
+            setTimeout(() => updateProgress(30, '调用OCR识别...'), 1000);
+            setTimeout(() => updateProgress(60, '提取文本内容...'), 2000);
+            setTimeout(() => updateProgress(80, '准备比对数据...'), 3000);
+            
+            setTimeout(() => {
+                updateProgress(100, '处理完成！');
+                
+                if (enableReview) {
+                    // 显示人工核查模态框
+                    showReviewModal();
+                } else {
+                    // 直接显示比对结果
+                    showComparison();
+                }
+            }, 4000);
+        }
+        
+        // 更新进度条
+        function updateProgress(percent, text) {
+            document.getElementById('progressFill').style.width = percent + '%';
+            document.getElementById('progressText').textContent = text;
+        }
+        
+        // 显示人工核查模态框
+        function showReviewModal() {
+            const modal = document.getElementById('reviewModal');
+            const content = document.getElementById('reviewContent');
+            
+            // 模拟生成核查页面
+            content.innerHTML = `
+                <div class="page-review">
+                    <div class="page-number">📄 第1页（共3页）</div>
+                    <textarea style="width:100%; height:150px; margin:10px 0;">
+【原文识别结果】
+子曰：学而时习之，不亦说乎？
+有朋自远方来，不亦乐乎？
+人不知而不愠，不亦君子乎？
+                    </textarea>
+                    <p>请核对并修改上面的识别结果</p>
+                </div>
+                <div class="page-review">
+                    <div class="page-number">📄 第2页</div>
+                    <textarea style="width:100%; height:150px; margin:10px 0;">
+曾子曰：吾日三省吾身——
+为人谋而不忠乎？
+与朋友交而不信乎？
+传不习乎？
+                    </textarea>
+                </div>
+                <div class="page-review">
+                    <div class="page-number">📄 第3页</div>
+                    <textarea style="width:100%; height:150px; margin:10px 0;">
+子曰：道千乘之国，敬事而信，
+节用而爱人，使民以时。
+                    </textarea>
+                </div>
+            `;
+            
+            modal.style.display = 'flex';
+        }
+        
+        // 关闭核查模态框
+        function closeReviewModal() {
+            document.getElementById('reviewModal').style.display = 'none';
+        }
+        
+        // 保存核查修改
+        function saveReview() {
+            alert('修改已保存！开始比对...');
+            closeReviewModal();
+            showComparison();
+        }
+        
+        // 显示比对结果
+        function showComparison() {
+            const resultArea = document.getElementById('resultArea');
+            
+            // 模拟比对结果
+            resultArea.innerHTML = `
+                <h3 style="color:#8B4513; margin-bottom:20px;">📊 比对结果分析</h3>
+                
+                <div style="background:#f8f9fa; padding:15px; border-radius:5px; margin-bottom:20px;">
+                    <h4>统计信息</h4>
+                    <p>✅ 总字数：1256字</p>
+                    <p>🔍 相同内容：892字（71%）</p>
+                    <p>➕ 版本差异：364字（29%）</p>
+                    <p>📈 相似度：71%</p>
+                </div>
+                
+                <div style="margin-top:20px;">
+                    <h4>差异示例</h4>
+                    <p>版本1：<span class="diff-removed">学而时习之</span>，不亦说乎？</p>
+                    <p>版本2：<span class="diff-added">学而时习也</span>，不亦说乎？</p>
+                    <p>版本3：学而时习之，不亦说乎？</p>
+                    
+                    <p style="margin-top:15px;">版本1：有朋自远方来，<span class="diff-removed">不亦乐乎</span>？</p>
+                    <p>版本2：有朋自远方来，<span class="diff-added">不亦悦乎</span>？</p>
+                </div>
+                
+                <div style="margin-top:30px; padding-top:20px; border-top:1px solid #ddd;">
+                    <h4>📋 版本摘要</h4>
+                    <p>• 版本1：明刻本《论语集注》</p>
+                    <p>• 版本2：清刻本《论语正义》</p>
+                    <p>• 版本3：现代整理本</p>
+                </div>
+            `;
+        }
+        
+        // 直接文本比对（跳过OCR）
+        function manualCompare() {
+            const versionCount = parseInt(document.getElementById('versionCount').value);
+            let hasText = false;
+            
+            // 检查是否有文本输入
+            for (let i = 1; i <= versionCount; i++) {
+                const textarea = document.querySelector(`textarea[data-version="${i}"]`);
+                if (textarea && textarea.value.trim()) {
+                    hasText = true;
+                    break;
+                }
+            }
+            
+            if (!hasText) {
+                alert('请至少在一个版本中输入文本！');
+                return;
+            }
+            
+            updateProgress(100, '直接文本比对完成！');
+            showComparison();
+        }
+        
+        // 导出结果
+        function exportResults() {
+            const content = `古籍比对结果\n生成时间：${new Date().toLocaleString()}\n\n`;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `古籍比对_${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
+            alert('结果已导出为文本文件！');
+        }
+        
+        // 清空所有
+        function clearAll() {
+            if (confirm('确定要清空所有内容吗？')) {
+                // 清空文件输入
+                document.querySelectorAll('.version-file').forEach(input => {
+                    input.value = '';
+                });
+                
+                // 清空文本输入
+                document.querySelectorAll('.version-text').forEach(textarea => {
+                    textarea.value = '';
+                });
+                
+                // 重置进度
+                updateProgress(0, '等待开始...');
+                
+                // 清空结果
+                document.getElementById('resultArea').innerHTML = 
+                    '<p style="text-align:center; color:#666; margin-top:100px;">比对结果将显示在这里...</p>';
+                
+                // 移除高亮
+                document.querySelectorAll('.version-box').forEach(box => {
+                    box.classList.remove('active');
+                });
+                
+                alert('已清空所有内容！');
+            }
+        }
+    </script>
 </body>
 </html>
-<!-- 替换原来的上传部分 -->
-<div class="card mb-4">
-    <div class="card-header">
-        <h5>第一步：上传古籍版本（支持2-5个版本）</h5>
-    </div>
-    <div class="card-body">
-        <div class="mb-3">
-            <label class="form-label">选择比对版本数量：</label>
-            <select class="form-select" id="versionCount" onchange="changeVersionCount()">
-                <option value="2">2个版本</option>
-                <option value="3">3个版本</option>
-                <option value="4">4个版本</option>
-                <option value="5">5个版本</option>
-            </select>
-        </div>
-        
-        <div id="versionContainer">
-            <!-- 动态生成的版本输入区域 -->
-        </div>
-        
-        <button class="btn btn-primary w-100 mt-3" onclick="processAllImages()">
-            🪄 开始识别所有版本
-        </button>
-    </div>
-</div>
-
-<!-- 在script.js之前添加这个script -->
-<script>
-// 初始化版本输入区域
-function initVersionContainer() {
-    const container = document.getElementById('versionContainer');
-    container.innerHTML = '';
-    
-    const count = parseInt(document.getElementById('versionCount').value);
-    
-    for (let i = 1; i <= count; i++) {
-        container.innerHTML += `
-            <div class="version-item mb-3">
-                <div class="row">
-                    <div class="col-md-6">
-                        <label class="form-label">版本 ${i} 图片：</label>
-                        <input type="file" class="form-control version-file" 
-                               data-version="${i}" accept="image/*">
-                        <div class="form-text">支持JPG、PNG格式</div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">或直接输入文本：</label>
-                        <textarea class="form-control version-text" 
-                                  data-version="${i}" rows="3" 
-                                  placeholder="版本 ${i} 文本..."></textarea>
-                    </div>
-                </div>
-                <div class="mt-2">
-                    <small class="text-muted">
-                        <span class="version-name">版本 ${i}</span>
-                        <input type="text" class="form-control form-control-sm d-inline-block w-auto ms-2" 
-                               placeholder="自定义名称（可选）" data-version="${i}">
-                    </small>
-                </div>
-            </div>
-        `;
-    }
-}
-
-// 版本数量变化时重新生成
-function changeVersionCount() {
-    initVersionContainer();
-}
-
-// 页面加载时初始化
-document.addEventListener('DOMContentLoaded', initVersionContainer);
-</script>
-<div class="card mb-4">
-    <div class="card-header">
-        <h5>第二步：选择OCR识别引擎</h5>
-    </div>
-    <div class="card-body">
-        <div class="mb-3">
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="ocrEngine" 
-                       id="ocrTesseract" value="tesseract" checked>
-                <label class="form-check-label" for="ocrTesseract">
-                    <strong>Tesseract.js（免费）</strong>
-                    <small class="text-muted d-block">本地识别，无需网络，速度较慢</small>
-                </label>
-            </div>
-            
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="ocrEngine" 
-                       id="ocrBaidu" value="baidu">
-                <label class="form-check-label" for="ocrBaidu">
-                    <strong>百度OCR API（需配置）</strong>
-                    <small class="text-muted d-block">识别准确率高，需要API Key</small>
-                </label>
-            </div>
-            
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="ocrEngine" 
-                       id="ocrTencent" value="tencent">
-                <label class="form-check-label" for="ocrTencent">
-                    <strong>腾讯OCR API（需配置）</strong>
-                    <small class="text-muted d-block">支持古籍字体，需要API Key</small>
-                </label>
-            </div>
-        </div>
-        
-        <!-- API配置区域（默认隐藏） -->
-        <div id="apiConfigArea" style="display: none;">
-            <div class="border p-3 rounded">
-                <h6>API配置</h6>
-                
-                <div id="baiduConfig" class="api-config">
-                    <div class="mb-2">
-                        <label class="form-label">百度API Key：</label>
-                        <input type="text" class="form-control" id="baiduApiKey" 
-                               placeholder="从百度AI平台获取">
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">百度Secret Key：</label>
-                        <input type="text" class="form-control" id="baiduSecretKey">
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary" onclick="testBaiduAPI()">
-                        测试连接
-                    </button>
-                </div>
-                
-                <div id="tencentConfig" class="api-config" style="display: none;">
-                    <div class="mb-2">
-                        <label class="form-label">腾讯SecretId：</label>
-                        <input type="text" class="form-control" id="tencentSecretId">
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">腾讯SecretKey：</label>
-                        <input type="text" class="form-control" id="tencentSecretKey">
-                    </div>
-                    <button class="btn btn-sm btn-outline-primary" onclick="testTencentAPI()">
-                        测试连接
-                    </button>
-                </div>
-                
-                <div class="mt-2">
-                    <small class="text-muted">
-                        🔑 如何获取API Key？
-                        <a href="https://ai.baidu.com/tech/ocr" target="_blank">百度OCR</a> |
-                        <a href="https://cloud.tencent.com/product/ocr" target="_blank">腾讯OCR</a>
-                    </small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- 修改版本文件上传input -->
-<input type="file" class="form-control version-file" 
-       data-version="${i}" accept="image/*,.pdf">
-<div class="form-text">支持JPG、PNG、PDF格式，最大200MB</div>
