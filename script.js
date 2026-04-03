@@ -1,188 +1,187 @@
-// script.js - 核心功能文件
-
-// 1. OCR识别功能（使用Tesseract.js - 完全免费）
-async function processImages() {
-    const fileA = document.getElementById('fileA').files[0];
-    const fileB = document.getElementById('fileB').files[0];
+// 多版本OCR处理
+async function processAllImages() {
+    const versionCount = parseInt(document.getElementById('versionCount').value);
+    const files = document.querySelectorAll('.version-file');
+    const texts = document.querySelectorAll('.version-text');
     
-    if (!fileA && !fileB) {
-        alert('请至少上传一张图片');
-        return;
-    }
-
     // 显示加载状态
-    document.getElementById('comparisonResult').innerHTML = 
-        '<div class="text-center"><div class="spinner-border text-primary"></div><p>正在识别文字...</p></div>';
-
+    showLoading('正在识别多个版本，请稍候...');
+    
     try {
-        // 初始化Tesseract
-        const worker = await Tesseract.createWorker('chi_sim'); // 简体中文，可改为'chi_tra'繁体
+        // 初始化OCR worker
+        const worker = await Tesseract.createWorker('chi_sim');
         
-        // 识别图片A
-        let textA = '';
-        if (fileA) {
-            const resultA = await worker.recognize(fileA);
-            textA = resultA.data.text;
-            document.getElementById('textA').value = textA;
+        // 处理每个版本
+        const results = [];
+        for (let i = 0; i < versionCount; i++) {
+            const file = files[i]?.files[0];
+            const textArea = texts[i];
+            
+            let text = textArea.value.trim();
+            
+            // 如果有上传图片且文本区域为空，则使用OCR
+            if (file && !text) {
+                const result = await worker.recognize(file);
+                text = result.data.text;
+                textArea.value = text;
+                
+                // 更新进度
+                updateProgress(i + 1, versionCount);
+            }
+            
+            // 获取版本名称
+            const nameInput = document.querySelector(`input[data-version="${i + 1}"]`);
+            const versionName = nameInput?.value || `版本 ${i + 1}`;
+            
+            results.push({
+                id: i + 1,
+                name: versionName,
+                text: text || textArea.value
+            });
         }
-
-        // 识别图片B
-        let textB = '';
-        if (fileB) {
-            const resultB = await worker.recognize(fileB);
-            textB = resultB.data.text;
-            document.getElementById('textB').value = textB;
-        }
-
+        
         await worker.terminate();
+        hideLoading();
         
-        alert('文字识别完成！现在可以点击"开始比对"按钮。');
+        // 保存结果到全局变量
+        window.versionResults = results;
+        
+        alert(`成功识别 ${results.length} 个版本！现在可以开始比对。`);
         
     } catch (error) {
-        console.error('OCR识别错误:', error);
-        alert('识别失败，请尝试：1.上传更清晰的图片 2.手动输入文本');
+        console.error('多版本识别错误:', error);
+        hideLoading();
+        alert('识别过程中出现错误，请检查网络或图片质量。');
     }
 }
 
-// 2. 文本比对功能
-function compareTexts() {
-    const textA = document.getElementById('textA').value.trim();
-    const textB = document.getElementById('textB').value.trim();
-    
-    if (!textA || !textB) {
-        alert('请先输入或识别两段文本');
+// 多版本比对函数
+function compareMultipleVersions() {
+    if (!window.versionResults || window.versionResults.length < 2) {
+        alert('请先识别至少2个版本的文字');
         return;
     }
-
-    // 使用Google的diff-match-patch算法
-    const dmp = new diff_match_patch();
-    const diffs = dmp.diff_main(textA, textB);
-    dmp.diff_cleanupSemantic(diffs);
     
-    // 生成带样式的HTML
-    let html = '';
-    let added = 0;
-    let removed = 0;
-    let unchanged = 0;
+    const results = window.versionResults;
+    const versionCount = results.length;
     
-    diffs.forEach(([type, text]) => {
-        switch(type) {
-            case 1: // 新增
-                html += `<span class="diff-added">${escapeHtml(text)}</span>`;
-                added += text.length;
-                break;
-            case -1: // 删除
-                html += `<span class="diff-removed">${escapeHtml(text)}</span>`;
-                removed += text.length;
-                break;
-            case 0: // 相同
-                html += `<span class="diff-unchanged">${escapeHtml(text)}</span>`;
-                unchanged += text.length;
-                break;
-        }
+    // 创建比对表格
+    let html = `
+        <table class="comparison-table">
+            <thead>
+                <tr>
+                    <th>位置</th>
+    `;
+    
+    // 添加表头（版本名称）
+    results.forEach(version => {
+        html += `<th>${version.name}</th>`;
     });
+    html += `</tr></thead><tbody>`;
     
-    // 显示结果
-    document.getElementById('comparisonResult').innerHTML = html;
+    // 这里需要实现多版本比对算法
+    // 简化版：按行分割后逐行比对
+    const allLines = results.map(v => v.text.split('\n'));
+    const maxLines = Math.max(...allLines.map(lines => lines.length));
     
-    // 显示统计
-    const total = added + removed + unchanged;
-    const similarity = total > 0 ? Math.round((unchanged / total) * 100) : 0;
+    for (let lineNum = 0; lineNum < maxLines; lineNum++) {
+        html += `<tr><td class="text-muted">第${lineNum + 1}行</td>`;
+        
+        const lineTexts = results.map(v => 
+            allLines[v.id - 1][lineNum] || ''
+        );
+        
+        // 检查这一行是否所有版本都相同
+        const isSameLine = lineTexts.every((text, i, arr) => 
+            text === arr
+        );
+        
+        lineTexts.forEach(text => {
+            if (isSameLine) {
+                html += `<td>${escapeHtml(text)}</td>`;
+            } else {
+                html += `<td class="diff-highlight">${escapeHtml(text)}</td>`;
+            }
+        });
+        
+        html += `</tr>`;
+    }
     
-    document.getElementById('stats').innerHTML = `
-        <div class="row">
-            <div class="col">
-                <span class="badge bg-success">新增: ${added}字</span>
-            </div>
-            <div class="col">
-                <span class="badge bg-danger">删除: ${removed}字</span>
-            </div>
-            <div class="col">
-                <span class="badge bg-primary">相同: ${unchanged}字</span>
-            </div>
-            <div class="col">
-                <span class="badge bg-info">相似度: ${similarity}%</span>
+    html += `</tbody></table>`;
+    
+    // 添加统计信息
+    html += `
+        <div class="mt-4">
+            <h6>比对统计：</h6>
+            <div class="row">
+                <div class="col">
+                    <span class="badge bg-info">总版本数: ${versionCount}</span>
+                </div>
+                <div class="col">
+                    <span class="badge bg-success">完全相同的行: ${calculateSameLines(results)}</span>
+                </div>
+                <div class="col">
+                    <span class="badge bg-warning">存在差异的行: ${calculateDiffLines(results)}</span>
+                </div>
             </div>
         </div>
     `;
-}
-
-// 3. 辅助函数
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function exportText() {
-    const result = document.getElementById('comparisonResult').innerText;
-    const textA = document.getElementById('textA').value;
-    const textB = document.getElementById('textB').value;
     
-    const content = `古籍文本比对结果\n\n版本A：\n${textA}\n\n版本B：\n${textB}\n\n比对结果：\n${result}`;
-    
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `古籍比对_${new Date().toISOString().slice(0,10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    document.getElementById('comparisonResult').innerHTML = html;
 }
 
-function clearAll() {
-    if (confirm('确定要清空所有内容吗？')) {
-        document.getElementById('fileA').value = '';
-        document.getElementById('fileB').value = '';
-        document.getElementById('textA').value = '';
-        document.getElementById('textB').value = '';
-        document.getElementById('comparisonResult').innerHTML = 
-            '<p class="text-muted">这里将显示文本比对结果...</p>';
-        document.getElementById('stats').innerHTML = '等待比对...';
+// 辅助函数：计算相同行数
+function calculateSameLines(results) {
+    const allLines = results.map(v => v.text.split('\n'));
+    const maxLines = Math.max(...allLines.map(lines => lines.length));
+    let sameCount = 0;
+    
+    for (let i = 0; i < maxLines; i++) {
+        const lineTexts = results.map(v => allLines[v.id - 1][i] || '');
+        if (lineTexts.every((text, idx, arr) => text === arr[0](@ref)) {
+            sameCount++;
+        }
     }
+    
+    return sameCount;
 }
 
-// 4. 百度OCR备用方案（如果需要更好的识别）
-async function useBaiduOCR(imageFile) {
-    // 这里需要你的百度OCR API Key
-    const apiKey = '你的API_KEY';
-    const secretKey = '你的SECRET_KEY';
-    
-    // 获取access_token
-    const tokenUrl = `https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=${apiKey}&client_secret=${secretKey}`;
-    
-    try {
-        const tokenResponse = await fetch(tokenUrl);
-        const tokenData = await tokenResponse.json();
-        const accessToken = tokenData.access_token;
-        
-        // 将图片转为base64
-        const reader = new FileReader();
-        return new Promise((resolve) => {
-            reader.onload = async function() {
-                const base64 = reader.result.split(',')[1];
-                
-                const ocrUrl = `https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic?access_token=${accessToken}`;
-                const formData = new FormData();
-                formData.append('image', base64);
-                
-                const response = await fetch(ocrUrl, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                if (data.words_result) {
-                    const text = data.words_result.map(item => item.words).join('\n');
-                    resolve(text);
-                } else {
-                    resolve('');
-                }
-            };
-            reader.readAsDataURL(imageFile);
-        });
-    } catch (error) {
-        console.error('百度OCR错误:', error);
-        return '';
+// 辅助函数：计算差异行数
+function calculateDiffLines(results) {
+    const allLines = results.map(v => v.text.split('\n'));
+    const maxLines = Math.max(...allLines.map(lines => lines.length));
+    return maxLines - calculateSameLines(results);
+}
+
+// 加载状态函数
+function showLoading(message) {
+    let loadingDiv = document.getElementById('multiLoading');
+    if (!loadingDiv) {
+        loadingDiv = document.createElement('div');
+        loadingDiv.id = 'multiLoading';
+        loadingDiv.className = 'alert alert-info';
+        loadingDiv.innerHTML = `
+            <div class="spinner-border spinner-border-sm me-2"></div>
+            <span id="loadingMessage">${message}</span>
+            <div class="progress mt-2">
+                <div id="multiProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+            </div>
+        `;
+        document.querySelector('.card-body').prepend(loadingDiv);
     }
+    loadingDiv.style.display = 'block';
+}
+
+function updateProgress(current, total) {
+    const progress = Math.round((current / total) * 100);
+    const bar = document.getElementById('multiProgressBar');
+    if (bar) bar.style.width = `${progress}%`;
+    
+    const msg = document.getElementById('loadingMessage');
+    if (msg) msg.textContent = `正在处理版本 ${current}/${total}...`;
+}
+
+function hideLoading() {
+    const loadingDiv = document.getElementById('multiLoading');
+    if (loadingDiv) loadingDiv.style.display = 'none';
 }
