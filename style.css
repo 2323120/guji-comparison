@@ -1,0 +1,57 @@
+/* style.css */
+body {
+    font-family: 'Noto Serif SC', serif;
+    background-color: #f8f9fa;
+    background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="%23f5f5f5"/><path d="M0,50 L100,50 M50,0 L50,100" stroke="%23e0e0e0" stroke-width="1"/></svg>');
+}
+
+.card {
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0d6c2;
+}
+
+.card-header {
+    background-color: #8b7355;
+    color: white;
+    border-radius: 15px 15px 0 0 !important;
+}
+
+.btn-primary {
+    background-color: #6d4c41;
+    border-color: #5d4037;
+}
+
+.btn-primary:hover {
+    background-color: #5d4037;
+}
+
+#comparisonResult {
+    background-color: #fffef7;
+    border: 1px solid #d7ccc8;
+    min-height: 200px;
+    font-family: 'Noto Serif SC', serif;
+    line-height: 1.8;
+}
+
+.diff-added {
+    background-color: #d4edda;
+    color: #155724;
+    text-decoration: none;
+}
+
+.diff-removed {
+    background-color: #f8d7da;
+    color: #721c24;
+    text-decoration: line-through;
+}
+
+.diff-unchanged {
+    color: #333;
+}
+
+footer {
+    margin-top: 50px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
