@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>古籍版本比对系统 - 完整版（图片对照+文本导出）</title>
+    <title>古籍版本比对系统 - 逐页对照核查版</title>
     <style>
         * {
             box-sizing: border-box;
@@ -343,7 +343,7 @@
             min-width: 300px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        /* 人工核查弹窗样式 */
+        /* 人工核查弹窗样式 - 逐页对照 */
         .modal {
             display: none;
             position: fixed;
@@ -357,12 +357,14 @@
         }
         .modal-content {
             background-color: #fefcf8;
-            margin: 5% auto;
+            margin: 3% auto;
             padding: 20px;
             border-radius: 20px;
-            width: 90%;
-            max-width: 1200px;
+            width: 95%;
+            max-width: 1400px;
             box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
         }
         .modal-header {
             display: flex;
@@ -371,6 +373,7 @@
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 1px solid #e0d5c5;
+            flex-wrap: wrap;
         }
         .modal-header h3 {
             margin: 0;
@@ -385,18 +388,49 @@
         .close-btn:hover {
             color: #7a4a1a;
         }
-        .edit-container {
+        /* 逐页对照样式 */
+        .page-tabs {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f0e8dc;
+            border-radius: 12px;
+        }
+        .page-tab {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #d4c4b0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .page-tab:hover {
+            background: #e8dcc8;
+        }
+        .page-tab.active {
+            background: #7a4a1a;
+            color: white;
+            border-color: #7a4a1a;
+        }
+        .page-content {
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
         }
-        .image-panel {
+        .page-image-panel {
             flex: 1;
             min-width: 300px;
             text-align: center;
+            background: #f9f6f0;
+            border-radius: 12px;
+            padding: 15px;
         }
-        .image-panel img {
+        .page-image-panel img {
             max-width: 100%;
+            max-height: 60vh;
             border-radius: 8px;
             border: 1px solid #e0d5c5;
             cursor: zoom-in;
@@ -411,19 +445,27 @@
             padding: 5px 12px;
             font-size: 14px;
         }
-        .text-panel {
-            flex: 2;
+        .page-text-panel {
+            flex: 1.5;
             min-width: 400px;
+            background: #f9f6f0;
+            border-radius: 12px;
+            padding: 15px;
         }
-        .text-panel textarea {
+        .page-text-panel textarea {
             width: 100%;
-            min-height: 400px;
+            min-height: 50vh;
             font-family: monospace;
             font-size: 14px;
             padding: 12px;
             border: 1px solid #d4c4b0;
             border-radius: 12px;
             resize: vertical;
+        }
+        .page-info {
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #7a4a1a;
         }
         .modal-footer {
             margin-top: 20px;
@@ -465,10 +507,10 @@
             .parallel-container {
                 flex-direction: column;
             }
-            .edit-container {
+            .page-content {
                 flex-direction: column;
             }
-            .text-panel {
+            .page-text-panel {
                 min-width: auto;
             }
         }
@@ -478,7 +520,7 @@
 <div class="container">
     <div class="header">
         <h1>📜 古籍版本比对系统</h1>
-        <p>图片OCR | PDF自动转图片识别 | 人工核查图片对照 | 多版本文本导出</p>
+        <p>图片OCR | PDF自动转图片识别 | 逐页对照核查 | 多版本文本导出</p>
     </div>
 
     <!-- 步骤1：选择添加类型 -->
@@ -490,7 +532,7 @@
             <div class="option-btn" data-type="text">✏️ 文本版本（直接比对）</div>
         </div>
         <div class="info-note" id="pdfNote" style="display:none;">
-            📌 <strong>PDF处理说明</strong>：系统会自动将PDF每一页转换为图片，然后逐页调用OCR识别。
+            📌 <strong>PDF处理说明</strong>：系统会自动将PDF每一页转换为图片，然后逐页调用OCR识别。人工核查时可逐页对照修改。
         </div>
     </div>
 
@@ -588,28 +630,36 @@
     </div>
 </div>
 
-<!-- 人工核查弹窗 -->
+<!-- 人工核查弹窗 - 逐页对照 -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 id="editModalTitle">✏️ 人工核查修改</h3>
+            <h3 id="editModalTitle">✏️ 人工核查修改 - 逐页对照</h3>
             <span class="close-btn" onclick="closeEditModal()">&times;</span>
         </div>
-        <div class="edit-container" id="editContainer">
-            <div class="image-panel" id="editImagePanel">
-                <img id="editImage" src="" alt="原始图片">
+        
+        <!-- 页签导航 -->
+        <div id="pageTabs" class="page-tabs"></div>
+        
+        <!-- 当前页内容 -->
+        <div id="pageContent" class="page-content">
+            <div class="page-image-panel">
+                <img id="currentPageImage" src="" alt="当前页图片">
                 <div class="zoom-controls">
                     <button class="btn-outline" onclick="zoomImage(-0.2)">🔍 缩小</button>
                     <button class="btn-outline" onclick="zoomImage(0.2)">🔍 放大</button>
                     <button class="btn-outline" onclick="resetZoom()">🔄 重置</button>
                 </div>
             </div>
-            <div class="text-panel">
-                <textarea id="editTextArea" placeholder="请修改识别错误的文字..."></textarea>
+            <div class="page-text-panel">
+                <div class="page-info" id="pageInfo"></div>
+                <textarea id="currentPageText" placeholder="请修改当前页的识别文字..."></textarea>
             </div>
         </div>
+        
         <div class="modal-footer">
-            <button class="btn" onclick="saveEdit()">💾 保存修改</button>
+            <button class="btn" onclick="saveCurrentPage()">💾 保存当前页修改</button>
+            <button class="btn btn-success" onclick="saveAllPagesAndClose()">✅ 保存全部并关闭</button>
             <button class="btn btn-outline" onclick="closeEditModal()">❌ 取消</button>
         </div>
     </div>
@@ -646,8 +696,11 @@
     
     // 编辑弹窗状态
     let currentEditVersion = null;
+    let currentPageIndex = 0;
     let currentZoom = 1;
-    let currentImageUrl = null;
+    
+    // PDF.js 库加载状态
+    let pdfjsLoaded = false;
 
     // 显示PDF提示
     document.querySelectorAll('[data-type]').forEach(btn => {
@@ -725,11 +778,13 @@
                 index: i,
                 type: currentType,
                 file: null,
-                content: null,
+                content: null,           // 完整文本（合并所有页）
+                pageTexts: [],           // 分页文本数组
+                pageImages: [],          // 分页图片URL数组
                 name: null,
                 uploaded: false,
                 isProcessed: false,
-                imageUrl: null  // 存储图片URL用于人工核查
+                totalPages: 0
             });
             
             if (currentType === 'image') {
@@ -780,21 +835,14 @@
         version.name = file.name.replace(/\.[^/.]+$/, '');
         version.uploaded = true;
         
-        // 存储图片URL用于人工核查
-        if (currentType === 'image') {
-            const url = URL.createObjectURL(file);
-            version.imageUrl = url;
-        } else if (currentType === 'pdf') {
-            // PDF暂时存储原文件，后续转换时再生成图片
-            version.imageUrl = null;
-        }
-        
         const previewDiv = document.getElementById(`preview_${versionId}`);
         const inputArea = document.getElementById(`inputArea_${versionId}`);
         const statusSpan = document.getElementById(`status_${versionId}`);
         
         if (currentType === 'image') {
-            const url = version.imageUrl;
+            const url = URL.createObjectURL(file);
+            version.pageImages = [url];
+            version.totalPages = 1;
             previewDiv.innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap;">
                     <div>
@@ -827,16 +875,18 @@
         if (!version) return;
         
         // 清理图片URL
-        if (version.imageUrl) {
-            URL.revokeObjectURL(version.imageUrl);
+        if (version.pageImages) {
+            version.pageImages.forEach(url => { if (url) URL.revokeObjectURL(url); });
         }
         
         version.file = null;
         version.content = null;
+        version.pageTexts = [];
+        version.pageImages = [];
         version.name = null;
         version.uploaded = false;
         version.isProcessed = false;
-        version.imageUrl = null;
+        version.totalPages = 0;
         
         const previewDiv = document.getElementById(`preview_${versionId}`);
         const inputArea = document.getElementById(`inputArea_${versionId}`);
@@ -876,6 +926,8 @@
         if (!version) return;
         
         version.content = text;
+        version.pageTexts = [text];
+        version.totalPages = 1;
         version.name = nameInput.value.trim() || `文本版本${version.index}`;
         version.uploaded = true;
         version.isProcessed = true;
@@ -1027,9 +1079,9 @@
         displayOCRResult(version, true);
         
         try {
-            let text = '';
-            
             if (version.type === 'image') {
+                // 图片版本：只有一页
+                let text = '';
                 switch(selectedOCR) {
                     case 'kandian':
                         text = await kandianImageOCR(version.file);
@@ -1046,15 +1098,22 @@
                     default:
                         text = await kandianImageOCR(version.file);
                 }
+                version.pageTexts = [text || ''];
+                version.content = text || '';
+                version.totalPages = 1;
+                
             } else if (version.type === 'pdf') {
-                text = await pdfToImagesAndOCR(version, onProgress);
+                // PDF版本：逐页处理
+                await pdfToImagesAndPages(version, onProgress);
+                // 合并所有页文本
+                version.content = version.pageTexts.map((text, idx) => `【第${idx+1}页】\n${text}`).join('\n\n');
             }
             
-            if (!text || text.trim() === '') {
-                text = '⚠️ 未识别到文字。可能原因：图片太模糊、文字不清晰。建议手动输入或更换清晰的图片。';
+            if (!version.content || version.content.trim() === '') {
+                version.content = '⚠️ 未识别到文字。可能原因：图片太模糊、文字不清晰。建议手动输入或更换清晰的图片。';
+                if (version.pageTexts.length === 0) version.pageTexts = [version.content];
             }
             
-            version.content = text;
             version.isProcessing = false;
             version.isProcessed = true;
             
@@ -1063,13 +1122,14 @@
             
             const previewDiv = document.getElementById(`ocrPreview_${version.id}`);
             if (previewDiv) {
-                const displayText = text.length > 200 ? text.substring(0,200)+'...' : text;
+                const displayText = version.content.length > 200 ? version.content.substring(0,200)+'...' : version.content;
                 previewDiv.innerHTML = displayText;
             }
             
         } catch (error) {
             console.error('OCR错误:', error);
             version.content = `❌ 识别失败: ${error.message}`;
+            version.pageTexts = [version.content];
             version.isProcessing = false;
             version.isProcessed = true;
             displayOCRResult(version);
@@ -1083,8 +1143,8 @@
         }
     }
     
-    // PDF转图片并OCR
-    async function pdfToImagesAndOCR(version, onProgress) {
+    // PDF转图片并逐页识别，存储每页图片和文字
+    async function pdfToImagesAndPages(version, onProgress) {
         let progressPopup = document.getElementById('pdfProgressPopup');
         if (!progressPopup) {
             progressPopup = document.createElement('div');
@@ -1110,15 +1170,13 @@
             const arrayBuffer = await version.file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             const numPages = pdf.numPages;
-            
-            // 存储每一页的图片URL，用于人工核查（PDF逐页核查）
-            version.pdfPageUrls = [];
-            
-            let allText = '';
+            version.totalPages = numPages;
+            version.pageTexts = new Array(numPages).fill('');
+            version.pageImages = new Array(numPages).fill(null);
             
             for (let pageNum = 1; pageNum <= numPages; pageNum++) {
                 const pageProgress = 10 + (pageNum / numPages) * 80;
-                progressPopup.querySelector('#pdfProgressMsg').innerHTML = `正在识别第 ${pageNum}/${numPages} 页...`;
+                progressPopup.querySelector('#pdfProgressMsg').innerHTML = `正在处理第 ${pageNum}/${numPages} 页...`;
                 progressPopup.querySelector('#pdfProgressFill').style.width = pageProgress + '%';
                 
                 const page = await pdf.getPage(pageNum);
@@ -1131,9 +1189,13 @@
                 
                 await page.render({ canvasContext: context, viewport: viewport }).promise;
                 
+                // 存储图片URL
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
                 const pageUrl = URL.createObjectURL(blob);
-                version.pdfPageUrls.push(pageUrl);
+                version.pageImages[pageNum - 1] = pageUrl;
+                
+                // 识别文字
+                progressPopup.querySelector('#pdfProgressMsg').innerHTML = `正在识别第 ${pageNum}/${numPages} 页文字...`;
                 
                 let pageText = '';
                 switch(selectedOCR) {
@@ -1152,15 +1214,12 @@
                     default:
                         pageText = await kandianImageOCR(blob);
                 }
-                
-                allText += `\n【第${pageNum}页】\n${pageText}\n`;
+                version.pageTexts[pageNum - 1] = pageText || '';
             }
             
-            progressPopup.querySelector('#pdfProgressMsg').innerHTML = '识别完成！';
+            progressPopup.querySelector('#pdfProgressMsg').innerHTML = '处理完成！';
             progressPopup.querySelector('#pdfProgressFill').style.width = '100%';
             setTimeout(() => progressPopup.remove(), 1500);
-            
-            return allText;
             
         } catch (error) {
             progressPopup.remove();
@@ -1170,6 +1229,10 @@
     
     function loadPDFJS() {
         return new Promise((resolve, reject) => {
+            if (pdfjsLoaded) {
+                resolve();
+                return;
+            }
             const script = document.createElement('script');
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
             script.onload = () => {
@@ -1177,6 +1240,7 @@
                 workerScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
                 workerScript.onload = () => {
                     pdfjsLib.GlobalWorkerOptions.workerSrc = workerScript.src;
+                    pdfjsLoaded = true;
                     resolve();
                 };
                 workerScript.onerror = () => reject(new Error('PDF worker加载失败'));
@@ -1383,51 +1447,77 @@
         });
     }
     
-    // ==================== 人工核查弹窗功能 ====================
+    // ==================== 人工核查弹窗功能（逐页对照） ====================
     function openEditModal(versionId) {
         const version = versions.find(v => v.id === versionId);
         if (!version) return;
         
         currentEditVersion = version;
+        currentPageIndex = 0;
         currentZoom = 1;
         
         document.getElementById('editModalTitle').innerHTML = `✏️ 人工核查修改 - ${version.name || `版本${version.index}`}`;
-        document.getElementById('editTextArea').value = version.content || '';
         
-        // 设置图片
-        const imgElement = document.getElementById('editImage');
-        if (version.type === 'image' && version.imageUrl) {
-            imgElement.src = version.imageUrl;
-            imgElement.style.transform = `scale(1)`;
-            imgElement.style.display = 'block';
-        } else if (version.type === 'pdf' && version.pdfPageUrls && version.pdfPageUrls.length > 0) {
-            // PDF显示第一页作为参考
-            imgElement.src = version.pdfPageUrls[0];
-            imgElement.style.transform = `scale(1)`;
-            imgElement.style.display = 'block';
-            document.getElementById('editImagePanel').querySelector('.zoom-controls').innerHTML += '<div style="margin-top:8px; font-size:12px; color:#666;">📄 PDF文件，显示第1页预览</div>';
-        } else if (version.type === 'text') {
-            imgElement.style.display = 'none';
-            document.getElementById('editImagePanel').innerHTML = '<div style="padding:40px; text-align:center; background:#f0e8dc; border-radius:12px;">📝 文本版本无原始图片<br>请直接修改下方文本内容</div>';
-        } else {
-            imgElement.style.display = 'none';
-        }
+        // 渲染页签
+        renderPageTabs(version);
+        
+        // 渲染当前页
+        renderCurrentPage(version);
         
         document.getElementById('editModal').style.display = 'block';
     }
     
-    function closeEditModal() {
-        document.getElementById('editModal').style.display = 'none';
-        // 重置图片面板
-        const imgElement = document.getElementById('editImage');
-        imgElement.style.transform = `scale(1)`;
-        imgElement.style.display = 'block';
+    function renderPageTabs(version) {
+        const tabsContainer = document.getElementById('pageTabs');
+        if (!version.pageTexts || version.pageTexts.length === 0) {
+            tabsContainer.innerHTML = '<div class="info-note">暂无分页数据</div>';
+            return;
+        }
+        
+        let html = '';
+        for (let i = 0; i < version.pageTexts.length; i++) {
+            const isActive = (i === currentPageIndex);
+            const textPreview = version.pageTexts[i] ? version.pageTexts[i].substring(0, 20) : '无文字';
+            html += `<div class="page-tab ${isActive ? 'active' : ''}" onclick="switchToPage(${i})">
+                        📄 第${i+1}页 <span style="font-size:11px;">(${textPreview}...)</span>
+                     </div>`;
+        }
+        tabsContainer.innerHTML = html;
+    }
+    
+    function switchToPage(pageIndex) {
+        if (!currentEditVersion) return;
+        currentPageIndex = pageIndex;
         currentZoom = 1;
-        currentEditVersion = null;
+        renderPageTabs(currentEditVersion);
+        renderCurrentPage(currentEditVersion);
+        // 重置图片缩放
+        const img = document.getElementById('currentPageImage');
+        if (img) img.style.transform = 'scale(1)';
+    }
+    
+    function renderCurrentPage(version) {
+        const pageNum = currentPageIndex + 1;
+        const pageText = version.pageTexts[currentPageIndex] || '';
+        const pageImageUrl = version.pageImages ? version.pageImages[currentPageIndex] : null;
+        
+        document.getElementById('pageInfo').innerHTML = `📄 第 ${pageNum} 页 / 共 ${version.pageTexts.length} 页`;
+        document.getElementById('currentPageText').value = pageText;
+        
+        const imgElement = document.getElementById('currentPageImage');
+        if (pageImageUrl) {
+            imgElement.src = pageImageUrl;
+            imgElement.style.display = 'block';
+            imgElement.style.transform = 'scale(1)';
+        } else {
+            imgElement.src = '';
+            imgElement.style.display = 'none';
+            document.getElementById('pageInfo').innerHTML += '<br>⚠️ 无对应图片，请检查文件';
+        }
     }
     
     function zoomImage(delta) {
-        const img = document.getElementById('editImage');
+        const img = document.getElementById('currentPageImage');
         if (!img || img.style.display === 'none') return;
         currentZoom = Math.max(0.5, Math.min(3, currentZoom + delta));
         img.style.transform = `scale(${currentZoom})`;
@@ -1435,26 +1525,59 @@
     }
     
     function resetZoom() {
-        const img = document.getElementById('editImage');
+        const img = document.getElementById('currentPageImage');
         if (!img) return;
         currentZoom = 1;
         img.style.transform = `scale(1)`;
     }
     
-    function saveEdit() {
+    function saveCurrentPage() {
         if (!currentEditVersion) return;
-        const newText = document.getElementById('editTextArea').value;
-        currentEditVersion.content = newText;
+        const newText = document.getElementById('currentPageText').value;
+        currentEditVersion.pageTexts[currentPageIndex] = newText;
+        
+        // 更新完整内容
+        currentEditVersion.content = currentEditVersion.pageTexts.map((text, idx) => `【第${idx+1}页】\n${text}`).join('\n\n');
         
         // 更新显示
         const displayDiv = document.getElementById(`ocrDisplay_${currentEditVersion.id}`);
         if (displayDiv) {
-            const displayText = newText.length > 500 ? newText.substring(0,500)+'...' : newText;
+            const displayText = currentEditVersion.content.length > 500 ? currentEditVersion.content.substring(0,500)+'...' : currentEditVersion.content;
+            displayDiv.innerHTML = escapeHtml(displayText);
+        }
+        
+        // 更新页签预览文字
+        renderPageTabs(currentEditVersion);
+        
+        alert(`第${currentPageIndex+1}页已保存`);
+    }
+    
+    function saveAllPagesAndClose() {
+        if (!currentEditVersion) return;
+        
+        // 保存当前页
+        const newText = document.getElementById('currentPageText').value;
+        currentEditVersion.pageTexts[currentPageIndex] = newText;
+        
+        // 更新完整内容
+        currentEditVersion.content = currentEditVersion.pageTexts.map((text, idx) => `【第${idx+1}页】\n${text}`).join('\n\n');
+        
+        // 更新显示
+        const displayDiv = document.getElementById(`ocrDisplay_${currentEditVersion.id}`);
+        if (displayDiv) {
+            const displayText = currentEditVersion.content.length > 500 ? currentEditVersion.content.substring(0,500)+'...' : currentEditVersion.content;
             displayDiv.innerHTML = escapeHtml(displayText);
         }
         
         closeEditModal();
-        alert('修改已保存！');
+        alert('所有修改已保存！');
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+        currentEditVersion = null;
+        currentPageIndex = 0;
+        currentZoom = 1;
     }
     
     // ==================== 导出文本功能 ====================
@@ -1509,7 +1632,10 @@
             if (version && version.content) {
                 exportContent += `【${version.name || `版本${version.index}】`}\n`;
                 exportContent += `类型：${version.type === 'image' ? '图片OCR' : (version.type === 'pdf' ? 'PDF OCR' : '文本输入')}\n`;
-                exportContent += `字数：${version.content.length}\n`;
+                exportContent += `总字数：${version.content.length}\n`;
+                if (version.pageTexts && version.pageTexts.length > 1) {
+                    exportContent += `总页数：${version.pageTexts.length}\n`;
+                }
                 exportContent += `${'-'.repeat(30)}\n`;
                 exportContent += `${version.content}\n`;
                 exportContent += `\n${'='.repeat(50)}\n\n`;
@@ -1538,24 +1664,11 @@
         if (isProcessing) {
             resultDiv.innerHTML = `<div class="version-header"><strong>📖 ${version.name || `版本${version.index}`}</strong><span><span class="loading"></span> 识别中...</span></div><div class="progress-bar"><div class="progress-fill" style="width:50%;"></div></div>`;
         } else {
+            const pageCount = version.pageTexts ? version.pageTexts.length : 1;
+            const pageInfo = pageCount > 1 ? ` (共${pageCount}页，可逐页对照)` : '';
             const displayText = version.content.length > 500 ? version.content.substring(0,500)+'...' : version.content;
-            resultDiv.innerHTML = `<div class="version-header"><strong>📖 ${version.name || `版本${version.index}`}</strong><div><button class="btn-outline" style="padding:5px 12px;" onclick="openEditModal(${version.id})">✏️ 人工核查修改（对照图片）</button></div></div><div class="ocr-result" id="ocrDisplay_${version.id}">${escapeHtml(displayText)}</div><div id="editArea_${version.id}" style="display:none;"><textarea id="editText_${version.id}" class="edit-textarea">${escapeHtml(version.content)}</textarea><button class="btn" onclick="saveOCRResult(${version.id})">保存修改</button><button class="btn btn-outline" onclick="cancelOCRResult(${version.id})">取消</button></div>`;
+            resultDiv.innerHTML = `<div class="version-header"><strong>📖 ${version.name || `版本${version.index}`}</strong><div><button class="btn-outline" style="padding:5px 12px;" onclick="openEditModal(${version.id})">✏️ 人工核查修改${pageInfo}</button></div></div><div class="ocr-result" id="ocrDisplay_${version.id}">${escapeHtml(displayText)}</div>`;
         }
-    }
-    
-    function saveOCRResult(id) {
-        const newText = document.getElementById(`editText_${id}`).value;
-        const version = versions.find(v => v.id === id);
-        if (version) {
-            version.content = newText;
-            const displayDiv = document.getElementById(`ocrDisplay_${id}`);
-            if (displayDiv) displayDiv.innerHTML = escapeHtml(newText.length>500?newText.substring(0,500)+'...':newText);
-            document.getElementById(`editArea_${id}`).style.display = 'none';
-        }
-    }
-    
-    function cancelOCRResult(id) {
-        document.getElementById(`editArea_${id}`).style.display = 'none';
     }
     
     document.getElementById('gotoCompareBtn').addEventListener('click', goToCompare);
@@ -1644,7 +1757,8 @@
         
         let overviewHtml = `<div class="info-note success"><strong>📚 已准备 ${versions.length} 个版本：</strong><br>`;
         for (let v of versions) {
-            overviewHtml += `• ${v.name || `版本${v.index}`} (${v.type === 'image' ? '图片OCR' : (v.type === 'pdf' ? 'PDF转图片OCR' : '文本')})<br>`;
+            const pageInfo = (v.pageTexts && v.pageTexts.length > 1) ? ` (${v.pageTexts.length}页)` : '';
+            overviewHtml += `• ${v.name || `版本${v.index}`} (${v.type === 'image' ? '图片OCR' : (v.type === 'pdf' ? 'PDF转图片OCR' : '文本')})${pageInfo}<br>`;
         }
         overviewHtml += `</div>`;
         
